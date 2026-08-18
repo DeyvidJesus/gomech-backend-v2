@@ -1,0 +1,48 @@
+spring:
+  application:
+    name: GoMechV2-API
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: false
+    validate-on-migrate: true
+    out-of-order: false
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        tenant_identifier_resolver: com.gomech.api.core.tenancy.HibernateTenantIdentifierResolver
+
+gomech:
+  tenancy:
+    # Whether the X-Tenant-ID header may select a tenant on the public login endpoint.
+    # Off everywhere unless a profile explicitly opts in: a caller-provided tenant is never an
+    # identity, and deployed environments must derive tenancy from the access token only.
+    trust-request-header: false
+
+jwt:
+  secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+  expiration: 900000 # 15 minutos em ms
+  refresh-expiration: 604800000 # 7 dias em ms
+
+logging:
+  pattern:
+    # Injects the correlation id into Spring Boot's default layout instead of replacing it, so every
+    # log line for a request is attributable without redefining the whole pattern.
+    level: "%5p [%X{correlation_id:-}]"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      probes:
+        enabled: true

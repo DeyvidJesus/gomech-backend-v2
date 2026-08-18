@@ -1,0 +1,44 @@
+package com.gomech.api.modules.iam.infrastructure.config;
+
+import com.gomech.api.modules.iam.infrastructure.persistence.model.Tenant;
+import com.gomech.api.modules.iam.infrastructure.persistence.model.User;
+import com.gomech.api.modules.iam.infrastructure.persistence.repository.TenantRepository;
+import com.gomech.api.modules.iam.infrastructure.persistence.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Component;
+
+import java.util.UUID;
+
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+
+@Component
+@RequiredArgsConstructor
+@ConditionalOnProperty(name = "gomech.data-loader.enabled", havingValue = "true", matchIfMissing = false)
+public class DataLoader implements CommandLineRunner {
+
+    private final TenantRepository tenantRepository;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    @Override
+    public void run(String... args) throws Exception {
+        if (tenantRepository.count() == 0) {
+            Tenant defaultTenant = new Tenant();
+            defaultTenant.setId(UUID.fromString("00000000-0000-0000-0000-000000000000"));
+            defaultTenant.setName("Oficina GoMech System");
+            defaultTenant.setCnpj("00.000.000/0001-00");
+            tenantRepository.save(defaultTenant);
+
+            User adminUser = new User();
+            adminUser.setTenantId(defaultTenant.getId());
+            adminUser.setName("System Admin");
+            adminUser.setEmail("admin@gomech.com");
+            adminUser.setPasswordHash(passwordEncoder.encode("admin123"));
+            userRepository.save(adminUser);
+
+            System.out.println("Tenant Zero e Admin criados! Login: admin@gomech.com / admin123");
+        }
+    }
+}

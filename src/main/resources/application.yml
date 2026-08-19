@@ -26,6 +26,16 @@ gomech:
     # Off everywhere unless a profile explicitly opts in: a caller-provided tenant is never an
     # identity, and deployed environments must derive tenancy from the access token only.
     trust-request-header: false
+  oauth:
+    google:
+      client-id: ${GOOGLE_CLIENT_ID:mock-google-client-id}
+      client-secret: ${GOOGLE_CLIENT_SECRET:mock-google-client-secret}
+      redirect-uri: ${GOOGLE_REDIRECT_URI:http://localhost:3000/auth/callback/google}
+      authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
+      token-uri: https://oauth2.googleapis.com/token
+      userinfo-uri: https://openidconnect.googleapis.com/v1/userinfo
+      jwks-uri: https://www.googleapis.com/oauth2/v3/certs
+      issuer: https://accounts.google.com
 
 jwt:
   secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}

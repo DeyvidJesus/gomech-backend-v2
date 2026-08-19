@@ -25,6 +25,33 @@ import java.util.UUID;
 public class AuthController {
 
     private final AuthService authService;
+    private final com.gomech.api.modules.iam.application.GoogleOAuthService googleOAuthService;
+
+    @Operation(summary = "Iniciar fluxo de autenticação Google OAuth 2.0 / OIDC", description = "Gera a URL de redirecionamento para o consentimento Google com estado criptograficamente assinado, nonce e desafio PKCE S256.")
+    @ApiResponse(responseCode = "200", description = "URL de autorização gerada com sucesso")
+    @GetMapping("/oauth/google/authorize")
+    public ResponseEntity<GoogleAuthorizeUrlResponse> googleAuthorize(
+            @RequestParam(value = "redirectUri", required = false) String redirectUri
+    ) {
+        return ResponseEntity.ok(googleOAuthService.generateAuthorizeUrl(redirectUri));
+    }
+
+    @Operation(summary = "Processar callback de autorização Google OAuth 2.0 / OIDC", description = "Valida estado assinado, nonce e PKCE, realiza a troca de código, valida o ID Token OIDC, vincula ou cria a conta e emite credenciais GoMech.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Autenticação Google concluída com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Estado expirado, nonce divergente ou código inválido"),
+            @ApiResponse(responseCode = "401", description = "Assinatura do ID Token inválida ou e-mail não verificado")
+    })
+    @PostMapping("/oauth/google/callback")
+    public ResponseEntity<AuthResponse> googleCallback(
+            @Valid @RequestBody GoogleOAuthCallbackRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        String ipAddress = extractIpAddress(httpRequest);
+        String userAgent = httpRequest.getHeader("User-Agent");
+        String deviceInfo = httpRequest.getHeader("X-Device-Info");
+        return ResponseEntity.ok(googleOAuthService.authenticate(request, ipAddress, userAgent, deviceInfo));
+    }
 
     @Operation(summary = "Autenticação por e-mail e senha", description = "Autentica um usuário existente e emite Access Token JWT e Refresh Token opaco rotacionável.")
     @ApiResponses({

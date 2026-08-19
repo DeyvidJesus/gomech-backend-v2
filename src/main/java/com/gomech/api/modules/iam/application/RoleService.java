@@ -38,6 +38,7 @@ public class RoleService {
                 "IAM_USER_READ", "IAM_USER_WRITE", "IAM_UNIT_READ",
                 "CRM_CUSTOMER_READ", "CRM_CUSTOMER_WRITE", "CRM_CUSTOMER_DELETE", "CRM_VEHICLE_READ", "CRM_VEHICLE_WRITE", "CRM_VEHICLE_DELETE",
                 "OPERATIONS_ORDER_READ", "OPERATIONS_ORDER_WRITE", "OPERATIONS_ORDER_EXECUTE", "OPERATIONS_ORDER_CLOSE",
+                "OPERATIONS_APPOINTMENT_READ", "OPERATIONS_APPOINTMENT_WRITE", "OPERATIONS_APPOINTMENT_CANCEL",
                 "INVENTORY_PRODUCT_READ", "INVENTORY_PRODUCT_WRITE", "INVENTORY_MOVEMENT_WRITE",
                 "FINANCE_TRANSACTION_READ", "FINANCE_TRANSACTION_WRITE"
         );
@@ -47,6 +48,7 @@ public class RoleService {
         Set<String> mechanicPermissionCodes = Set.of(
                 "CRM_VEHICLE_READ",
                 "OPERATIONS_ORDER_READ", "OPERATIONS_ORDER_EXECUTE",
+                "OPERATIONS_APPOINTMENT_READ",
                 "INVENTORY_PRODUCT_READ"
         );
         createOrUpdateRole(tenantId, "Mecânico", "Execução técnica de ordens de serviço e consulta de veículos", mapPermissions(mechanicPermissionCodes, permissionMap));
@@ -55,6 +57,7 @@ public class RoleService {
         Set<String> attendantPermissionCodes = Set.of(
                 "CRM_CUSTOMER_READ", "CRM_CUSTOMER_WRITE", "CRM_VEHICLE_READ", "CRM_VEHICLE_WRITE",
                 "OPERATIONS_ORDER_READ", "OPERATIONS_ORDER_WRITE",
+                "OPERATIONS_APPOINTMENT_READ", "OPERATIONS_APPOINTMENT_WRITE", "OPERATIONS_APPOINTMENT_CANCEL",
                 "INVENTORY_PRODUCT_READ",
                 "FINANCE_TRANSACTION_READ"
         );

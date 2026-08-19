@@ -33,7 +33,7 @@ public class GoogleOAuthService {
     private final UserIdentityRepository userIdentityRepository;
     private final TenantRepository tenantRepository;
     private final UnitRepository unitRepository;
-    private final RoleRepository roleRepository;
+    private final RoleService roleService;
     private final UserSessionRepository userSessionRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
@@ -60,7 +60,7 @@ public class GoogleOAuthService {
             UserIdentityRepository userIdentityRepository,
             TenantRepository tenantRepository,
             UnitRepository unitRepository,
-            RoleRepository roleRepository,
+            RoleService roleService,
             UserSessionRepository userSessionRepository,
             PasswordEncoder passwordEncoder,
             JwtUtil jwtUtil
@@ -71,7 +71,7 @@ public class GoogleOAuthService {
         this.userIdentityRepository = userIdentityRepository;
         this.tenantRepository = tenantRepository;
         this.unitRepository = unitRepository;
-        this.roleRepository = roleRepository;
+        this.roleService = roleService;
         this.userSessionRepository = userSessionRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
@@ -201,14 +201,8 @@ public class GoogleOAuthService {
         unit.setHeadquarters(true);
         unit = unitRepository.save(unit);
 
-        // 3. Criar Role Proprietário
-        Role ownerRole = roleRepository.findByName("Proprietário").orElseGet(() -> {
-            Role newRole = new Role();
-            newRole.setTenantId(newTenantId);
-            newRole.setName("Proprietário");
-            newRole.setDescription("Acesso total");
-            return roleRepository.save(newRole);
-        });
+        // 3. Provisionar catálogo de papéis padrão (Proprietário, Gerente, Mecânico, Atendente)
+        Role ownerRole = roleService.provisionDefaultRoles(newTenantId);
 
         // 4. Criar Usuário
         User user = new User();

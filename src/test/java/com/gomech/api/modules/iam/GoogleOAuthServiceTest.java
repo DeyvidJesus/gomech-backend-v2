@@ -7,6 +7,7 @@ import com.gomech.api.modules.iam.api.dto.GoogleAuthorizeUrlResponse;
 import com.gomech.api.modules.iam.api.dto.GoogleOAuthCallbackRequest;
 import com.gomech.api.modules.iam.application.GoogleOAuthClient;
 import com.gomech.api.modules.iam.application.GoogleOAuthService;
+import com.gomech.api.modules.iam.application.RoleService;
 import com.gomech.api.modules.iam.domain.UserStatus;
 import com.gomech.api.modules.iam.infrastructure.oauth.GoogleIdTokenPayload;
 import com.gomech.api.modules.iam.infrastructure.oauth.GoogleTokenResponse;
@@ -39,7 +40,7 @@ class GoogleOAuthServiceTest {
     @Mock private UserIdentityRepository userIdentityRepository;
     @Mock private TenantRepository tenantRepository;
     @Mock private UnitRepository unitRepository;
-    @Mock private RoleRepository roleRepository;
+    @Mock private RoleService roleService;
     @Mock private UserSessionRepository userSessionRepository;
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private JwtUtil jwtUtil;
@@ -55,7 +56,7 @@ class GoogleOAuthServiceTest {
                 userIdentityRepository,
                 tenantRepository,
                 unitRepository,
-                roleRepository,
+                roleService,
                 userSessionRepository,
                 passwordEncoder,
                 jwtUtil
@@ -196,8 +197,9 @@ class GoogleOAuthServiceTest {
 
         when(tenantRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
         when(unitRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
-        when(roleRepository.findByName("Proprietário")).thenReturn(Optional.empty());
-        when(roleRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        Role ownerRole = new Role();
+        ownerRole.setName("Proprietário");
+        when(roleService.provisionDefaultRoles(any())).thenReturn(ownerRole);
         when(userRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
         when(passwordEncoder.encode(any())).thenReturn("hashed-random-pw");
         when(jwtUtil.generateToken(any(), any(), any(), any(), any())).thenReturn("gomech-jwt-token");

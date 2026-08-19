@@ -8,7 +8,7 @@ import com.gomech.api.core.authorization.api.AuthorizationRequest;
 import com.gomech.api.core.authorization.application.AuthorizationService;
 import com.gomech.api.core.authorization.api.AccessDecision;
 import com.gomech.api.core.authorization.api.ActorContext;
-import com.gomech.api.core.authorization.infrastructure.AllowAllAuthorizationService;
+import com.gomech.api.core.authorization.infrastructure.RbacAuthorizationService;
 import com.gomech.api.core.entitlement.application.EntitlementService;
 import com.gomech.api.core.entitlement.api.EntitlementSnapshot;
 import com.gomech.api.core.entitlement.infrastructure.StaticEntitlementService;
@@ -26,17 +26,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class CoreContractsTest {
 
     @Test
-    void authorization_contract_is_implementation_agnostic() {
-        AuthorizationService service = new AllowAllAuthorizationService();
+    void authorization_contract_evaluates_rbac_actor() {
+        AuthorizationService service = new RbacAuthorizationService();
         ActorContext actor = actor();
 
         AccessDecision decision = service.authorize(
             actor,
-            new AuthorizationRequest("user:create", "user", "123", Map.of("unitId", "u-1"))
+            new AuthorizationRequest("user:read", "user", "123", Map.of())
         );
 
         assertTrue(decision.allowed());
-        assertEquals("authorization_contract_placeholder", decision.reason());
     }
 
     @Test

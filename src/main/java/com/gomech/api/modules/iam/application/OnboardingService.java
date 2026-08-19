@@ -6,7 +6,10 @@ import com.gomech.api.modules.iam.api.dto.AuthResponse;
 import com.gomech.api.modules.iam.api.dto.RegisterWorkshopRequest;
 import com.gomech.api.modules.iam.api.dto.UserSummaryDto;
 import com.gomech.api.modules.iam.infrastructure.persistence.model.*;
-import com.gomech.api.modules.iam.infrastructure.persistence.repository.*;
+import com.gomech.api.modules.iam.infrastructure.persistence.repository.TenantRepository;
+import com.gomech.api.modules.iam.infrastructure.persistence.repository.UnitRepository;
+import com.gomech.api.modules.iam.infrastructure.persistence.repository.UserRepository;
+import com.gomech.api.modules.iam.infrastructure.persistence.repository.UserSessionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,43 +26,47 @@ public class OnboardingService {
 
     private final TenantRepository tenantRepository;
     private final UnitRepository unitRepository;
+    private final RoleService roleService;
     private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
     private final UserSessionRepository userSessionRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
-    @Value("${jwt.expiration}")
+    @Value("${jwt.expiration:900000}")
     private long jwtExpiration;
 
-    @Value("${jwt.refresh-expiration}")
+    @Value("${jwt.refresh-expiration:604800000}")
     private long jwtRefreshExpiration;
-
-    public AuthResponse register(RegisterWorkshopRequest request) {
-        UUID newTenantId = UUID.randomUUID();
-        TenantContextHolder.setTenantId(newTenantId);
-        try {
-            return register(request, newTenantId);
-        } finally {
-            TenantContextHolder.clear();
-        }
-    }
 
     @Transactional
     public AuthResponse register(RegisterWorkshopRequest request, UUID newTenantId) {
+        return registerWithTenantId(request, newTenantId, null, null, null);
+    }
+
+    @Transactional
+    public AuthResponse registerWorkshop(RegisterWorkshopRequest request, String ipAddress, String userAgent, String deviceInfo) {
+        UUID newTenantId = UUID.randomUUID();
+        return registerWithTenantId(request, newTenantId, ipAddress, userAgent, deviceInfo);
+    }
+
+    @Transactional
+    public AuthResponse registerWithTenantId(RegisterWorkshopRequest request, UUID newTenantId, String ipAddress, String userAgent, String deviceInfo) {
+        // Estabelece o Tenant no contexto para viabilizar as inserções subsequentes
+        TenantContextHolder.setTenantId(newTenantId);
+
         if (userRepository.existsByEmail(request.email())) {
             throw new IllegalArgumentException("E-mail já cadastrado");
         }
 
-        // 1. Create Tenant
+        // 1. Criar Tenant
         Tenant tenant = new Tenant();
         tenant.setId(newTenantId);
         tenant.setName(request.workshopName());
-        // Mocking CNPJ for now as it wasn't in step 1 of Figma, normally we would ask for it.
+        // Mocking CNPJ provisório se não informado
         tenant.setCnpj("00.000.000/" + newTenantId.toString().substring(0, 4) + "-00");
         tenant = tenantRepository.save(tenant);
 
-        // 2. Create Headquarters Unit
+        // 2. Criar Unidade Matriz
         Unit unit = new Unit();
         unit.setTenantId(newTenantId);
         unit.setName("Matriz");
@@ -67,59 +74,62 @@ public class OnboardingService {
         unit.setHeadquarters(true);
         unit = unitRepository.save(unit);
 
-            // 4. Ensure "Proprietário" role exists or create it
-            Role ownerRole = roleRepository.findByName("Proprietário").orElseGet(() -> {
-                Role newRole = new Role();
-                newRole.setTenantId(newTenantId);
-                newRole.setName("Proprietário");
-                newRole.setDescription("Acesso total");
-                return roleRepository.save(newRole);
-            });
+        // 3. Provisionar catálogo de papéis padrão (Proprietário, Gerente, Mecânico, Atendente)
+        Role ownerRole = roleService.provisionDefaultRoles(newTenantId);
 
-            // 5. Create Owner User
-            User user = new User();
-            user.setTenantId(tenant.getId());
-            user.setName(request.ownerName());
-            user.setEmail(request.email());
-            user.setPasswordHash(passwordEncoder.encode(request.password()));
-            user.setLastLogin(OffsetDateTime.now());
-            user = userRepository.save(user);
+        // 4. Criar Usuário Proprietário
+        User user = new User();
+        user.setTenantId(tenant.getId());
+        user.setName(request.ownerName());
+        user.setEmail(request.email().toLowerCase().trim());
+        user.setPasswordHash(passwordEncoder.encode(request.password()));
+        user.setLastLogin(OffsetDateTime.now());
+        user = userRepository.save(user);
 
-            // 6. Assign Role to User
-            UserRole userRole = new UserRole();
-            userRole.setUser(user);
-            userRole.setRole(ownerRole);
-            userRole.setUnit(unit);
-            userRole.setTenantId(tenant.getId());
-            user.getUserRoles().add(userRole);
-            userRepository.save(user);
+        // 5. Vincular Papel de Proprietário ao Usuário na Unidade Matriz
+        UserRole userRole = new UserRole();
+        userRole.setUser(user);
+        userRole.setRole(ownerRole);
+        userRole.setUnit(unit);
+        userRole.setTenantId(tenant.getId());
+        user.getUserRoles().add(userRole);
+        userRepository.save(user);
 
-            // 7. Generate Tokens
-            List<String> roles = List.of(ownerRole.getName());
-            List<String> permissions = ownerRole.getPermissions().stream().map(Permission::getCode).toList();
-            String accessToken = jwtUtil.generateToken(user.getId(), user.getTenantId(), unit.getId(), roles, permissions);
-            String refreshToken = UUID.randomUUID().toString();
+        // 6. Gerar Tokens proprietários GoMech
+        List<String> roles = List.of(ownerRole.getName());
+        List<String> permissions = ownerRole.getPermissions().stream().map(Permission::getCode).toList();
+        String accessToken = jwtUtil.generateToken(user.getId(), user.getTenantId(), unit.getId(), roles, permissions);
+        String refreshToken = UUID.randomUUID().toString();
 
-            UserSession session = new UserSession();
-            session.setUser(user);
-            session.setTenantId(tenant.getId());
-            session.setFamilyId(UUID.randomUUID());
-            session.setRefreshToken(refreshToken);
-            session.setExpiresAt(OffsetDateTime.now().plusSeconds(jwtRefreshExpiration / 1000));
-            session.setLastUsedAt(OffsetDateTime.now());
-            session.setRevoked(false);
-            userSessionRepository.save(session);
+        UserSession session = new UserSession();
+        session.setUser(user);
+        session.setTenantId(tenant.getId());
+        session.setFamilyId(UUID.randomUUID());
+        session.setRefreshToken(refreshToken);
+        session.setExpiresAt(OffsetDateTime.now().plusSeconds(jwtRefreshExpiration / 1000));
+        session.setIpAddress(ipAddress);
+        session.setUserAgent(userAgent);
+        session.setDeviceInfo(deviceInfo);
+        session.setLastUsedAt(OffsetDateTime.now());
+        session.setRevoked(false);
+        userSessionRepository.save(session);
 
-            UserSummaryDto userSummary = new UserSummaryDto(
-                    user.getId(),
-                    user.getName(),
-                    user.getEmail(),
-                    tenant.getId(),
-                    unit.getId(),
-                    roles,
-                    permissions
-            );
+        UserSummaryDto userSummary = new UserSummaryDto(
+                user.getId(),
+                user.getName(),
+                user.getEmail(),
+                tenant.getId(),
+                unit.getId(),
+                roles,
+                permissions
+        );
 
-            return new AuthResponse(accessToken, refreshToken, "Bearer", jwtExpiration / 1000, userSummary);
+        return new AuthResponse(
+                accessToken,
+                refreshToken,
+                "Bearer",
+                jwtExpiration / 1000,
+                userSummary
+        );
     }
 }

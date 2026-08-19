@@ -7,6 +7,7 @@ import com.gomech.api.modules.iam.api.dto.RefreshTokenRequest;
 import com.gomech.api.modules.iam.application.AuthService;
 import com.gomech.api.modules.iam.domain.UserStatus;
 import com.gomech.api.modules.iam.infrastructure.persistence.model.*;
+import com.gomech.api.modules.iam.infrastructure.persistence.repository.UnitRepository;
 import com.gomech.api.modules.iam.infrastructure.persistence.repository.UserRepository;
 import com.gomech.api.modules.iam.infrastructure.persistence.repository.UserSessionRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,6 +33,9 @@ class AuthServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private UnitRepository unitRepository;
 
     @Mock
     private UserSessionRepository userSessionRepository;
@@ -192,7 +196,8 @@ class AuthServiceTest {
     @Test
     @DisplayName("Should switch unit and generate token with target unit scope")
     void shouldSwitchUnitSuccessfully() {
-        when(userRepository.findById(testUser.getId())).thenReturn(Optional.of(testUser));
+        when(userRepository.findByIdWithRoles(testUser.getId())).thenReturn(Optional.of(testUser));
+        when(unitRepository.findById(testUnit.getId())).thenReturn(Optional.of(testUnit));
         when(jwtUtil.generateToken(eq(testUser.getId()), eq(testUser.getTenantId()), eq(testUnit.getId()), any(), any()))
                 .thenReturn("unit-scoped-jwt");
 
@@ -206,13 +211,48 @@ class AuthServiceTest {
     @Test
     @DisplayName("Should reject unit switch if user has no authorization in target unit")
     void shouldRejectUnauthorizedUnitSwitch() {
-        when(userRepository.findById(testUser.getId())).thenReturn(Optional.of(testUser));
+        Role mechanicRole = new Role();
+        mechanicRole.setId(UUID.randomUUID());
+        mechanicRole.setName("Mecânico");
+
+        User mechanicUser = new User();
+        mechanicUser.setId(UUID.randomUUID());
+        mechanicUser.setTenantId(testUser.getTenantId());
+        mechanicUser.setStatus(UserStatus.ACTIVE);
+
+        UserRole ur = new UserRole();
+        ur.setUser(mechanicUser);
+        ur.setRole(mechanicRole);
+        ur.setUnit(testUnit);
+        mechanicUser.getUserRoles().add(ur);
+
+        when(userRepository.findByIdWithRoles(mechanicUser.getId())).thenReturn(Optional.of(mechanicUser));
 
         UUID unauthorizedUnitId = UUID.randomUUID();
+        Unit unauthorizedUnit = new Unit();
+        unauthorizedUnit.setId(unauthorizedUnitId);
+        unauthorizedUnit.setTenantId(mechanicUser.getTenantId());
+        when(unitRepository.findById(unauthorizedUnitId)).thenReturn(Optional.of(unauthorizedUnit));
 
-        assertThatThrownBy(() -> authService.switchUnit(testUser.getId(), unauthorizedUnitId))
+        assertThatThrownBy(() -> authService.switchUnit(mechanicUser.getId(), unauthorizedUnitId))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("não possui acesso");
+    }
+
+    @Test
+    @DisplayName("Should reject unit switch if target unit belongs to another tenant")
+    void shouldRejectUnitSwitchToAnotherTenant() {
+        when(userRepository.findByIdWithRoles(testUser.getId())).thenReturn(Optional.of(testUser));
+
+        UUID otherTenantUnitId = UUID.randomUUID();
+        Unit otherTenantUnit = new Unit();
+        otherTenantUnit.setId(otherTenantUnitId);
+        otherTenantUnit.setTenantId(UUID.randomUUID());
+        when(unitRepository.findById(otherTenantUnitId)).thenReturn(Optional.of(otherTenantUnit));
+
+        assertThatThrownBy(() -> authService.switchUnit(testUser.getId(), otherTenantUnitId))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("pertence a outra organização");
     }
 
     @Test

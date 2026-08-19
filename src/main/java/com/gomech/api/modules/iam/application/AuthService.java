@@ -5,9 +5,11 @@ import com.gomech.api.modules.iam.api.dto.*;
 import com.gomech.api.modules.iam.domain.UserStatus;
 import com.gomech.api.modules.iam.infrastructure.persistence.model.Permission;
 import com.gomech.api.modules.iam.infrastructure.persistence.model.Role;
+import com.gomech.api.modules.iam.infrastructure.persistence.model.Unit;
 import com.gomech.api.modules.iam.infrastructure.persistence.model.User;
 import com.gomech.api.modules.iam.infrastructure.persistence.model.UserRole;
 import com.gomech.api.modules.iam.infrastructure.persistence.model.UserSession;
+import com.gomech.api.modules.iam.infrastructure.persistence.repository.UnitRepository;
 import com.gomech.api.modules.iam.infrastructure.persistence.repository.UserRepository;
 import com.gomech.api.modules.iam.infrastructure.persistence.repository.UserSessionRepository;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +31,7 @@ public class AuthService {
     private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
     private final UserRepository userRepository;
+    private final UnitRepository unitRepository;
     private final UserSessionRepository userSessionRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
@@ -216,15 +219,24 @@ public class AuthService {
 
     @Transactional(readOnly = true)
     public AuthResponse switchUnit(UUID userId, UUID targetUnitId) {
-        User user = userRepository.findById(userId)
+        User user = userRepository.findByIdWithRoles(userId)
                 .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
 
         if (!UserStatus.isActive(user.getStatus())) {
             throw new IllegalArgumentException("Usuário inativo ou suspenso");
         }
 
+        Unit targetUnit = unitRepository.findById(targetUnitId)
+                .orElseThrow(() -> new IllegalArgumentException("Unidade não encontrada: " + targetUnitId));
+
+        if (!targetUnit.getTenantId().equals(user.getTenantId())) {
+            throw new IllegalArgumentException("Acesso negado: a unidade solicitada pertence a outra organização");
+        }
+
         boolean hasAccessToUnit = user.getUserRoles().stream()
-                .anyMatch(ur -> ur.getUnit() == null || (ur.getUnit() != null && ur.getUnit().getId().equals(targetUnitId)));
+                .anyMatch(ur -> (ur.getRole() != null && "Proprietário".equals(ur.getRole().getName()))
+                        || ur.getUnit() == null
+                        || (ur.getUnit() != null && ur.getUnit().getId().equals(targetUnitId)));
 
         if (!hasAccessToUnit) {
             throw new IllegalArgumentException("Usuário não possui acesso à unidade especificada");
@@ -270,7 +282,9 @@ public class AuthService {
             return List.of();
         }
         return user.getUserRoles().stream()
-                .filter(ur -> ur.getUnit() == null || (unitId != null && ur.getUnit().getId().equals(unitId)))
+                .filter(ur -> (ur.getRole() != null && "Proprietário".equals(ur.getRole().getName()))
+                        || ur.getUnit() == null
+                        || (unitId != null && ur.getUnit() != null && ur.getUnit().getId().equals(unitId)))
                 .map(UserRole::getRole)
                 .filter(Objects::nonNull)
                 .map(Role::getName)
@@ -283,7 +297,9 @@ public class AuthService {
             return List.of();
         }
         return user.getUserRoles().stream()
-                .filter(ur -> ur.getUnit() == null || (unitId != null && ur.getUnit().getId().equals(unitId)))
+                .filter(ur -> (ur.getRole() != null && "Proprietário".equals(ur.getRole().getName()))
+                        || ur.getUnit() == null
+                        || (unitId != null && ur.getUnit() != null && ur.getUnit().getId().equals(unitId)))
                 .map(UserRole::getRole)
                 .filter(Objects::nonNull)
                 .flatMap(r -> r.getPermissions().stream())

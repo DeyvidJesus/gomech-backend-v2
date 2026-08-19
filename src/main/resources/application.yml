@@ -30,7 +30,7 @@ gomech:
     google:
       client-id: ${GOOGLE_CLIENT_ID:mock-google-client-id}
       client-secret: ${GOOGLE_CLIENT_SECRET:mock-google-client-secret}
-      redirect-uri: ${GOOGLE_REDIRECT_URI:http://localhost:3000/auth/callback/google}
+      redirect-uri: ${GOOGLE_REDIRECT_URI:http://localhost:5173/auth/callback/google}
       authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
       token-uri: https://oauth2.googleapis.com/token
       userinfo-uri: https://openidconnect.googleapis.com/v1/userinfo

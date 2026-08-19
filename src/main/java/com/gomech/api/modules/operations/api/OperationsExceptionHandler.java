@@ -202,4 +202,14 @@ public class OperationsExceptionHandler {
         problemDetail.setType(URI.create(ERROR_TYPE_BASE + "quote-not-eligible-for-work-order"));
         return problemDetail;
     }
+
+    @ExceptionHandler(com.gomech.api.modules.operations.domain.VehicleNotFoundException.class)
+    public ProblemDetail handleVehicleNotFoundException(com.gomech.api.modules.operations.domain.VehicleNotFoundException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+                HttpStatus.NOT_FOUND, ex.getMessage()
+        );
+        problemDetail.setTitle("Vehicle Not Found");
+        problemDetail.setType(URI.create(ERROR_TYPE_BASE + "vehicle-not-found"));
+        return problemDetail;
+    }
 }

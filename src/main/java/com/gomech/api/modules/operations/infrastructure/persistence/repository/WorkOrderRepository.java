@@ -30,4 +30,11 @@ public interface WorkOrderRepository extends JpaRepository<WorkOrder, UUID>, Jpa
     );
 
     List<WorkOrder> findByTenantIdAndVehicleIdAndDeletedAtIsNullOrderByCreatedAtDesc(UUID tenantId, UUID vehicleId);
+
+    @Query("SELECT DISTINCT w FROM WorkOrder w LEFT JOIN FETCH w.items WHERE w.tenantId = :tenantId AND w.vehicleId = :vehicleId AND w.status = :status AND w.deletedAt IS NULL ORDER BY w.completedAt DESC NULLS LAST, w.createdAt DESC")
+    List<WorkOrder> findCompletedByVehicleWithItems(
+            @Param("tenantId") UUID tenantId,
+            @Param("vehicleId") UUID vehicleId,
+            @Param("status") WorkOrderStatus status
+    );
 }

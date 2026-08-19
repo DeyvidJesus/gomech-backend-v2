@@ -43,6 +43,16 @@ public class GlobalExceptionHandler {
         return problemDetail;
     }
 
+    @ExceptionHandler(SecurityException.class)
+    public ProblemDetail handleSecurityException(SecurityException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+                HttpStatus.UNAUTHORIZED, ex.getMessage()
+        );
+        problemDetail.setTitle("Unauthorized");
+        problemDetail.setType(URI.create(ERROR_TYPE_BASE + "unauthorized"));
+        return problemDetail;
+    }
+
     @ExceptionHandler(OptimisticLockingFailureException.class)
     public ProblemDetail handleOptimisticLockingFailureException(OptimisticLockingFailureException ex) {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(

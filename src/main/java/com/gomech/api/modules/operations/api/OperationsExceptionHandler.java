@@ -2,8 +2,12 @@ package com.gomech.api.modules.operations.api;
 
 import com.gomech.api.modules.operations.domain.AppointmentNotFoundException;
 import com.gomech.api.modules.operations.domain.CustomerVehicleMismatchException;
+import com.gomech.api.modules.operations.domain.InspectionAlreadyCompletedException;
+import com.gomech.api.modules.operations.domain.InspectionNotFoundException;
+import com.gomech.api.modules.operations.domain.InvalidAppointmentInspectionLinkException;
 import com.gomech.api.modules.operations.domain.InvalidAppointmentStatusTransitionException;
 import com.gomech.api.modules.operations.domain.InvalidCalendarRangeException;
+import com.gomech.api.modules.operations.domain.InvalidInspectionStatusTransitionException;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
@@ -29,6 +33,16 @@ public class OperationsExceptionHandler {
         return problemDetail;
     }
 
+    @ExceptionHandler(InspectionNotFoundException.class)
+    public ProblemDetail handleInspectionNotFoundException(InspectionNotFoundException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+                HttpStatus.NOT_FOUND, ex.getMessage()
+        );
+        problemDetail.setTitle("Inspection Not Found");
+        problemDetail.setType(URI.create(ERROR_TYPE_BASE + "inspection-not-found"));
+        return problemDetail;
+    }
+
     @ExceptionHandler(CustomerVehicleMismatchException.class)
     public ProblemDetail handleCustomerVehicleMismatchException(CustomerVehicleMismatchException ex) {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
@@ -46,6 +60,36 @@ public class OperationsExceptionHandler {
         );
         problemDetail.setTitle("Invalid Status Transition");
         problemDetail.setType(URI.create(ERROR_TYPE_BASE + "invalid-status-transition"));
+        return problemDetail;
+    }
+
+    @ExceptionHandler(InvalidInspectionStatusTransitionException.class)
+    public ProblemDetail handleInvalidInspectionStatusTransitionException(InvalidInspectionStatusTransitionException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+                HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage()
+        );
+        problemDetail.setTitle("Invalid Inspection Status Transition");
+        problemDetail.setType(URI.create(ERROR_TYPE_BASE + "invalid-inspection-status-transition"));
+        return problemDetail;
+    }
+
+    @ExceptionHandler(InspectionAlreadyCompletedException.class)
+    public ProblemDetail handleInspectionAlreadyCompletedException(InspectionAlreadyCompletedException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+                HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage()
+        );
+        problemDetail.setTitle("Inspection Already Finalized");
+        problemDetail.setType(URI.create(ERROR_TYPE_BASE + "inspection-already-finalized"));
+        return problemDetail;
+    }
+
+    @ExceptionHandler(InvalidAppointmentInspectionLinkException.class)
+    public ProblemDetail handleInvalidAppointmentInspectionLinkException(InvalidAppointmentInspectionLinkException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+                HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage()
+        );
+        problemDetail.setTitle("Invalid Appointment Link");
+        problemDetail.setType(URI.create(ERROR_TYPE_BASE + "invalid-appointment-link"));
         return problemDetail;
     }
 

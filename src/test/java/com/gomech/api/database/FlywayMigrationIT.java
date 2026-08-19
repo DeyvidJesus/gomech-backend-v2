@@ -63,7 +63,7 @@ class FlywayMigrationIT {
                 "role_permissions", "user_roles", "user_sessions",
                 "customers", "vehicles",
                 "suppliers", "products",
-                "quotes", "work_orders", "appointments", "inspections", "inspection_items", "inventory_movements",
+                "quotes", "quote_items", "work_orders", "appointments", "inspections", "inspection_items", "inventory_movements",
                 "subscriptions", "payments", "financial_transactions",
                 "audit_logs"
         );
@@ -180,7 +180,7 @@ class FlywayMigrationIT {
     @Test
     @DisplayName("Row Level Security is enabled on tenant and unit tables")
     void rowLevelSecurityIsEnabledOnTenantTables() throws Exception {
-        String[] rlsTables = {"tenants", "units", "users", "work_orders", "quotes", "customers", "appointments", "inspections", "inspection_items", "inventory_movements"};
+        String[] rlsTables = {"tenants", "units", "users", "work_orders", "quotes", "quote_items", "customers", "appointments", "inspections", "inspection_items", "inventory_movements"};
 
         try (Connection conn = DriverManager.getConnection(
                 POSTGRES.getJdbcUrl(), POSTGRES.getUsername(), POSTGRES.getPassword());

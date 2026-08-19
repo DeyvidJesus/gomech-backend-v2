@@ -102,4 +102,54 @@ public class OperationsExceptionHandler {
         problemDetail.setType(URI.create(ERROR_TYPE_BASE + "invalid-calendar-range"));
         return problemDetail;
     }
+
+    @ExceptionHandler(com.gomech.api.modules.operations.domain.QuoteNotFoundException.class)
+    public ProblemDetail handleQuoteNotFoundException(com.gomech.api.modules.operations.domain.QuoteNotFoundException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+                HttpStatus.NOT_FOUND, ex.getMessage()
+        );
+        problemDetail.setTitle("Quote Not Found");
+        problemDetail.setType(URI.create(ERROR_TYPE_BASE + "quote-not-found"));
+        return problemDetail;
+    }
+
+    @ExceptionHandler(com.gomech.api.modules.operations.domain.InvalidQuoteStatusTransitionException.class)
+    public ProblemDetail handleInvalidQuoteStatusTransitionException(com.gomech.api.modules.operations.domain.InvalidQuoteStatusTransitionException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+                HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage()
+        );
+        problemDetail.setTitle("Invalid Quote Status Transition");
+        problemDetail.setType(URI.create(ERROR_TYPE_BASE + "invalid-quote-status-transition"));
+        return problemDetail;
+    }
+
+    @ExceptionHandler(com.gomech.api.modules.operations.domain.QuoteCannotBeModifiedException.class)
+    public ProblemDetail handleQuoteCannotBeModifiedException(com.gomech.api.modules.operations.domain.QuoteCannotBeModifiedException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+                HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage()
+        );
+        problemDetail.setTitle("Quote Cannot Be Modified");
+        problemDetail.setType(URI.create(ERROR_TYPE_BASE + "quote-cannot-be-modified"));
+        return problemDetail;
+    }
+
+    @ExceptionHandler(com.gomech.api.modules.operations.domain.QuoteNotApprovedForSendingException.class)
+    public ProblemDetail handleQuoteNotApprovedForSendingException(com.gomech.api.modules.operations.domain.QuoteNotApprovedForSendingException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+                HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage()
+        );
+        problemDetail.setTitle("Quote Not Approved For Sending");
+        problemDetail.setType(URI.create(ERROR_TYPE_BASE + "quote-not-approved-for-sending"));
+        return problemDetail;
+    }
+
+    @ExceptionHandler(com.gomech.api.modules.operations.domain.InvalidMonetaryAmountException.class)
+    public ProblemDetail handleInvalidMonetaryAmountException(com.gomech.api.modules.operations.domain.InvalidMonetaryAmountException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+                HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage()
+        );
+        problemDetail.setTitle("Invalid Monetary Amount");
+        problemDetail.setType(URI.create(ERROR_TYPE_BASE + "invalid-monetary-amount"));
+        return problemDetail;
+    }
 }

@@ -1,10 +1,14 @@
 package com.gomech.api.modules.iam.application;
 
+import com.gomech.api.core.entitlement.application.EntitlementService;
+import com.gomech.api.core.entitlement.domain.QuotaDimension;
+import com.gomech.api.core.events.DomainEventBus;
 import com.gomech.api.core.security.JwtUtil;
 import com.gomech.api.core.tenancy.TenantContextHolder;
 import com.gomech.api.modules.iam.api.dto.AuthResponse;
 import com.gomech.api.modules.iam.api.dto.RegisterWorkshopRequest;
 import com.gomech.api.modules.iam.api.dto.UserSummaryDto;
+import com.gomech.api.modules.iam.events.TenantCreatedEvent;
 import com.gomech.api.modules.iam.infrastructure.persistence.model.*;
 import com.gomech.api.modules.iam.infrastructure.persistence.repository.TenantRepository;
 import com.gomech.api.modules.iam.infrastructure.persistence.repository.UnitRepository;
@@ -31,6 +35,8 @@ public class OnboardingService {
     private final UserSessionRepository userSessionRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final DomainEventBus domainEventBus;
+    private final EntitlementService entitlementService;
 
     @Value("${jwt.expiration:900000}")
     private long jwtExpiration;
@@ -66,6 +72,9 @@ public class OnboardingService {
         tenant.setCnpj("00.000.000/" + newTenantId.toString().substring(0, 4) + "-00");
         tenant = tenantRepository.save(tenant);
 
+        // Publicar evento de domínio de criação de Tenant para Billing e outros módulos
+        domainEventBus.publish(new TenantCreatedEvent(newTenantId, request.workshopName(), request.email()));
+
         // 2. Criar Unidade Matriz
         Unit unit = new Unit();
         unit.setTenantId(newTenantId);
@@ -94,6 +103,10 @@ public class OnboardingService {
         userRole.setTenantId(tenant.getId());
         user.getUserRoles().add(userRole);
         userRepository.save(user);
+
+        // Registrar consumo inicial de cota para a Unidade Matriz e o Usuário Proprietário
+        entitlementService.recordUsage(newTenantId, QuotaDimension.UNITS, 1L);
+        entitlementService.recordUsage(newTenantId, QuotaDimension.USERS, 1L);
 
         // 6. Gerar Tokens proprietários GoMech
         List<String> roles = List.of(ownerRole.getName());

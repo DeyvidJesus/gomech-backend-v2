@@ -34,14 +34,23 @@ class ModuleArchitectureRulesTest {
         assertProductionClassesExistIn("..modules.iam.application..");
         assertProductionClassesExistIn("..modules.iam.domain..");
         assertProductionClassesExistIn("..modules.iam.infrastructure..");
+        assertProductionClassesExistIn("..modules.billing.api..");
+        assertProductionClassesExistIn("..modules.billing.application..");
+        assertProductionClassesExistIn("..modules.billing.domain..");
+        assertProductionClassesExistIn("..modules.billing.infrastructure..");
         assertProductionClassesExistIn("..core..");
 
         assertTrue(
-            countAnnotatedWith("jakarta.persistence.Entity") >= 7,
-            "expected the IAM JPA entities to be imported, found " + countAnnotatedWith("jakarta.persistence.Entity"));
+            countAnnotatedWith("jakarta.persistence.Entity") >= 10,
+            "expected the IAM and Billing JPA entities to be imported, found " + countAnnotatedWith("jakarta.persistence.Entity"));
         assertTrue(
-            countAnnotatedWith("org.springframework.web.bind.annotation.RestController") >= 3,
-            "expected the IAM controllers to be imported");
+            countAnnotatedWith("org.springframework.web.bind.annotation.RestController") >= 6,
+            "expected the IAM and Billing controllers to be imported");
+    }
+
+    @Test
+    void iam_must_not_depend_on_billing() {
+        ModuleArchitectureRules.iamMustNotDependOnBilling().check(productionClasses);
     }
 
     @Test

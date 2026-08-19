@@ -1,5 +1,6 @@
 package com.gomech.api.modules.iam.application;
 
+import com.gomech.api.core.events.DomainEventBus;
 import com.gomech.api.core.security.JwtUtil;
 import com.gomech.api.core.security.OAuthStateUtil;
 import com.gomech.api.core.tenancy.TenantContextHolder;
@@ -8,6 +9,7 @@ import com.gomech.api.modules.iam.api.dto.GoogleAuthorizeUrlResponse;
 import com.gomech.api.modules.iam.api.dto.GoogleOAuthCallbackRequest;
 import com.gomech.api.modules.iam.api.dto.UserSummaryDto;
 import com.gomech.api.modules.iam.domain.UserStatus;
+import com.gomech.api.modules.iam.events.TenantCreatedEvent;
 import com.gomech.api.modules.iam.infrastructure.oauth.GoogleIdTokenPayload;
 import com.gomech.api.modules.iam.infrastructure.oauth.GoogleTokenResponse;
 import com.gomech.api.modules.iam.infrastructure.persistence.model.*;
@@ -37,6 +39,7 @@ public class GoogleOAuthService {
     private final UserSessionRepository userSessionRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final DomainEventBus domainEventBus;
 
     @Value("${gomech.oauth.google.client-id}")
     private String clientId;
@@ -63,7 +66,8 @@ public class GoogleOAuthService {
             RoleService roleService,
             UserSessionRepository userSessionRepository,
             PasswordEncoder passwordEncoder,
-            JwtUtil jwtUtil
+            JwtUtil jwtUtil,
+            DomainEventBus domainEventBus
     ) {
         this.googleOAuthClient = googleOAuthClient;
         this.oAuthStateUtil = oAuthStateUtil;
@@ -75,6 +79,7 @@ public class GoogleOAuthService {
         this.userSessionRepository = userSessionRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
+        this.domainEventBus = domainEventBus;
     }
 
     public GoogleAuthorizeUrlResponse generateAuthorizeUrl(String customRedirectUri) {
@@ -192,6 +197,9 @@ public class GoogleOAuthService {
         tenant.setName(workshopName);
         tenant.setCnpj("00.000.000/" + newTenantId.toString().substring(0, 4) + "-00");
         tenant = tenantRepository.save(tenant);
+
+        // Publicar evento de criação de tenant para Billing e outros módulos
+        domainEventBus.publish(new TenantCreatedEvent(newTenantId, workshopName, googleEmail));
 
         // 2. Criar Unidade Matriz
         Unit unit = new Unit();

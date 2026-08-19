@@ -11,4 +11,6 @@ import java.util.UUID;
 public interface UnitRepository extends JpaRepository<Unit, UUID> {
 
     List<Unit> findAllByTenantId(UUID tenantId);
+
+    long countByTenantId(UUID tenantId);
 }

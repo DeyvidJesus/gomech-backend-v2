@@ -63,6 +63,30 @@ public class GlobalExceptionHandler {
         return problemDetail;
     }
 
+    @ExceptionHandler(com.gomech.api.core.entitlement.domain.QuotaExceededException.class)
+    public ProblemDetail handleQuotaExceededException(com.gomech.api.core.entitlement.domain.QuotaExceededException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+                HttpStatus.PAYMENT_REQUIRED, ex.getMessage()
+        );
+        problemDetail.setTitle("Quota Exceeded");
+        problemDetail.setType(URI.create(ERROR_TYPE_BASE + "quota-exceeded"));
+        problemDetail.setProperty("dimension", ex.getDimension().name());
+        problemDetail.setProperty("currentUsage", ex.getCurrentUsage());
+        problemDetail.setProperty("limit", ex.getLimit());
+        return problemDetail;
+    }
+
+    @ExceptionHandler(com.gomech.api.core.entitlement.domain.ModuleAccessDeniedException.class)
+    public ProblemDetail handleModuleAccessDeniedException(com.gomech.api.core.entitlement.domain.ModuleAccessDeniedException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+                HttpStatus.FORBIDDEN, ex.getMessage()
+        );
+        problemDetail.setTitle("Module Access Denied");
+        problemDetail.setType(URI.create(ERROR_TYPE_BASE + "module-access-denied"));
+        problemDetail.setProperty("moduleCode", ex.getModuleCode());
+        return problemDetail;
+    }
+
     private static InvalidParam toInvalidParam(ObjectError error) {
         String name = error instanceof FieldError fieldError
                 ? fieldError.getField()

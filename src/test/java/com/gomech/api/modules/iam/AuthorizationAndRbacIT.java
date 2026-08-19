@@ -106,6 +106,13 @@ class AuthorizationAndRbacIT {
         AuthResponse authResponse = objectMapper.readValue(regJson, AuthResponse.class);
         String token = authResponse.accessToken();
 
+        // Upgrade para plano PRO para liberar limite de filiais
+        mockMvc.perform(post("/api/v1/billing/subscription/change-plan")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"planCode\":\"PRO\"}"))
+                .andExpect(status().isOk());
+
         // Criar Filial Zona Sul
         CreateUnitRequest branchReq = new CreateUnitRequest("Filial Zona Sul", "Av. Sul, 200", false);
         String unitJson = mockMvc.perform(post("/api/v1/units")

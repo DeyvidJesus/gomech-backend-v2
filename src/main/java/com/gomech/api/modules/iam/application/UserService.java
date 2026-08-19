@@ -1,5 +1,9 @@
 package com.gomech.api.modules.iam.application;
 
+import com.gomech.api.core.entitlement.api.QuotaDecision;
+import com.gomech.api.core.entitlement.application.EntitlementService;
+import com.gomech.api.core.entitlement.domain.QuotaDimension;
+import com.gomech.api.core.entitlement.domain.QuotaExceededException;
 import com.gomech.api.core.tenancy.TenantContextHolder;
 import com.gomech.api.modules.iam.api.dto.AssignUserRoleRequest;
 import com.gomech.api.modules.iam.api.dto.CreateUserRequest;
@@ -30,6 +34,7 @@ public class UserService {
     private final RoleRepository roleRepository;
     private final UnitRepository unitRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EntitlementService entitlementService;
 
     @Transactional(readOnly = true)
     public List<UserResponse> getUsers(UUID tenantId) {
@@ -59,6 +64,17 @@ public class UserService {
         }
 
         UUID tenantId = TenantContextHolder.getTenantId();
+
+        // Avaliação de cota de usuários ativos via Core Entitlement
+        QuotaDecision quotaDecision = entitlementService.checkQuota(tenantId, QuotaDimension.USERS, 1);
+        if (!quotaDecision.allowed()) {
+            throw new QuotaExceededException(
+                    QuotaDimension.USERS,
+                    quotaDecision.currentUsage(),
+                    quotaDecision.limit(),
+                    "Limite de usuários ativos atingido para o plano da oficina. Limite: " + quotaDecision.limit()
+            );
+        }
 
         User user = new User();
         user.setName(request.name());
@@ -96,6 +112,7 @@ public class UserService {
         }
 
         User savedUser = userRepository.save(user);
+        entitlementService.recordUsage(tenantId, QuotaDimension.USERS, 1);
         return toResponse(savedUser);
     }
 

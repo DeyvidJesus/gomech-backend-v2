@@ -1,5 +1,9 @@
 package com.gomech.api.modules.iam.application;
 
+import com.gomech.api.core.entitlement.api.QuotaDecision;
+import com.gomech.api.core.entitlement.application.EntitlementService;
+import com.gomech.api.core.entitlement.domain.QuotaDimension;
+import com.gomech.api.core.entitlement.domain.QuotaExceededException;
 import com.gomech.api.core.tenancy.TenantContextHolder;
 import com.gomech.api.modules.iam.api.dto.CreateUnitRequest;
 import com.gomech.api.modules.iam.api.dto.UnitResponse;
@@ -19,6 +23,7 @@ import java.util.UUID;
 public class UnitService {
 
     private final UnitRepository unitRepository;
+    private final EntitlementService entitlementService;
 
     @Transactional(readOnly = true)
     public List<UnitResponse> getUnits(UUID tenantId) {
@@ -45,6 +50,17 @@ public class UnitService {
     public UnitResponse createUnit(CreateUnitRequest request, UUID tenantId) {
         UUID effectiveTenantId = tenantId != null ? tenantId : TenantContextHolder.getTenantId();
 
+        // Avaliação de cota de unidades / filiais via Core Entitlement
+        QuotaDecision quotaDecision = entitlementService.checkQuota(effectiveTenantId, QuotaDimension.UNITS, 1);
+        if (!quotaDecision.allowed()) {
+            throw new QuotaExceededException(
+                    QuotaDimension.UNITS,
+                    quotaDecision.currentUsage(),
+                    quotaDecision.limit(),
+                    "Limite de unidades/filiais atingido para o plano da oficina. Limite: " + quotaDecision.limit()
+            );
+        }
+
         if (request.isHeadquarters()) {
             // Se esta nova unidade for matriz, desmarcar a matriz anterior
             List<Unit> existingUnits = unitRepository.findAllByTenantId(effectiveTenantId);
@@ -63,6 +79,7 @@ public class UnitService {
         unit.setHeadquarters(request.isHeadquarters());
 
         Unit savedUnit = unitRepository.save(unit);
+        entitlementService.recordUsage(effectiveTenantId, QuotaDimension.UNITS, 1);
         log.info("Nova unidade '{}' ({}) criada com sucesso para o tenant {}", savedUnit.getName(), savedUnit.getId(), effectiveTenantId);
         return toResponse(savedUnit);
     }

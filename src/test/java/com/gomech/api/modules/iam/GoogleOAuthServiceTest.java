@@ -44,6 +44,7 @@ class GoogleOAuthServiceTest {
     @Mock private UserSessionRepository userSessionRepository;
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private JwtUtil jwtUtil;
+    @Mock private com.gomech.api.core.events.DomainEventBus domainEventBus;
 
     private GoogleOAuthService googleOAuthService;
 
@@ -59,7 +60,8 @@ class GoogleOAuthServiceTest {
                 roleService,
                 userSessionRepository,
                 passwordEncoder,
-                jwtUtil
+                jwtUtil,
+                domainEventBus
         );
 
         ReflectionTestUtils.setField(googleOAuthService, "clientId", "test-client-id");

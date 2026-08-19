@@ -254,6 +254,16 @@ final class ModuleArchitectureRules {
             .because("ADR-002: modules communicate through explicit contracts and events only.");
     }
 
+    static ArchRule iamMustNotDependOnBilling() {
+        return noClasses()
+            .that().resideInAPackage("..modules.iam..")
+            .should().dependOnClassesThat()
+            .resideInAPackage("..modules.billing..")
+            .as("iam_must_not_depend_on_billing")
+            .because("ADR-007: IAM manages identities and authentication independently of subscription and billing. "
+                + "IAM communicates via domain events and Core contracts; it must never import Billing classes directly.");
+    }
+
     static ArchRule repositoriesMustNotBeImportedOutsideTheirModule() {
         return classes()
             .should(notDependOn(

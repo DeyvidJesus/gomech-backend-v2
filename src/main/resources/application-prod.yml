@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:postgresql:///${DB_NAME:gomech_prod}?cloudSqlInstance=${GCP_PROJECT_ID}:${GCP_REGION}:${CLOUD_SQL_INSTANCE}&socketFactory=com.google.cloud.sql.postgres.SocketFactory
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT:5432}/${DB_NAME:gomech_prod}?sslmode=${DB_SSL_MODE:require}
     username: ${DB_USER}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver

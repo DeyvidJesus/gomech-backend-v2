@@ -64,6 +64,6 @@ O projeto está otimizado para múltiplos ambientes operacionais:
 - `local` (Padrão para desenvolvimento local com `application-local.yml`)
 - `dev`
 - `staging`
-- `prod` (Usado em produção no GCP Cloud Run conectando no Cloud SQL via Cloud SQL Auth Proxy)
+- `prod` (Usado em produção na AWS - ECS Fargate/App Runner conectando no Amazon RDS for PostgreSQL via JDBC SSL)
 
 Em ambiente local, senhas de banco e variáveis do JWT já vêm preenchidas nos arquivos `.yml` para funcionar de imediato (Plug & Play) sem a necessidade de definir dezenas de variáveis de ambiente.

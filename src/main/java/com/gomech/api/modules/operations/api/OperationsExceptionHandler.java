@@ -152,4 +152,54 @@ public class OperationsExceptionHandler {
         problemDetail.setType(URI.create(ERROR_TYPE_BASE + "invalid-monetary-amount"));
         return problemDetail;
     }
+
+    @ExceptionHandler(com.gomech.api.modules.operations.domain.WorkOrderNotFoundException.class)
+    public ProblemDetail handleWorkOrderNotFoundException(com.gomech.api.modules.operations.domain.WorkOrderNotFoundException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+                HttpStatus.NOT_FOUND, ex.getMessage()
+        );
+        problemDetail.setTitle("Work Order Not Found");
+        problemDetail.setType(URI.create(ERROR_TYPE_BASE + "work-order-not-found"));
+        return problemDetail;
+    }
+
+    @ExceptionHandler(com.gomech.api.modules.operations.domain.InvalidWorkOrderStatusTransitionException.class)
+    public ProblemDetail handleInvalidWorkOrderStatusTransitionException(com.gomech.api.modules.operations.domain.InvalidWorkOrderStatusTransitionException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+                HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage()
+        );
+        problemDetail.setTitle("Invalid Work Order Status Transition");
+        problemDetail.setType(URI.create(ERROR_TYPE_BASE + "invalid-work-order-status-transition"));
+        return problemDetail;
+    }
+
+    @ExceptionHandler(com.gomech.api.modules.operations.domain.WorkOrderAlreadyCompletedException.class)
+    public ProblemDetail handleWorkOrderAlreadyCompletedException(com.gomech.api.modules.operations.domain.WorkOrderAlreadyCompletedException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+                HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage()
+        );
+        problemDetail.setTitle("Work Order Already Completed");
+        problemDetail.setType(URI.create(ERROR_TYPE_BASE + "work-order-already-completed"));
+        return problemDetail;
+    }
+
+    @ExceptionHandler(com.gomech.api.modules.operations.domain.QuoteAlreadyConvertedException.class)
+    public ProblemDetail handleQuoteAlreadyConvertedException(com.gomech.api.modules.operations.domain.QuoteAlreadyConvertedException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+                HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage()
+        );
+        problemDetail.setTitle("Quote Already Converted");
+        problemDetail.setType(URI.create(ERROR_TYPE_BASE + "quote-already-converted"));
+        return problemDetail;
+    }
+
+    @ExceptionHandler(com.gomech.api.modules.operations.domain.QuoteNotEligibleForWorkOrderException.class)
+    public ProblemDetail handleQuoteNotEligibleForWorkOrderException(com.gomech.api.modules.operations.domain.QuoteNotEligibleForWorkOrderException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+                HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage()
+        );
+        problemDetail.setTitle("Quote Not Eligible For Work Order");
+        problemDetail.setType(URI.create(ERROR_TYPE_BASE + "quote-not-eligible-for-work-order"));
+        return problemDetail;
+    }
 }

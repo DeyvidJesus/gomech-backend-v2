@@ -108,7 +108,11 @@ public class Quote {
     @Column(name = "version", nullable = false)
     private Long version;
 
-    protected Quote() {
+    public Quote() {
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
     }
 
     public Quote(UUID tenantId, UUID unitId, UUID customerId, UUID vehicleId, UUID inspectionId,

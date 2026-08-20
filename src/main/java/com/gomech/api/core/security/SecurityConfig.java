@@ -53,6 +53,8 @@ public class SecurityConfig {
         configuration.setAllowedOriginPatterns(List.of(
                 "http://localhost:*",
                 "http://127.0.0.1:*",
+                "https://*.run.app",
+                "https://*.a.run.app",
                 "https://*.gomech.com.br",
                 "https://gomech.com.br"
         ));

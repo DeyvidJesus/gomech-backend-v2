@@ -56,8 +56,26 @@ public class Subscription {
     @Column(name = "cancel_at_period_end")
     private boolean cancelAtPeriodEnd = false;
 
+    @Column(name = "gateway_customer_id", length = 100)
+    private String gatewayCustomerId;
+
     @Column(name = "gateway_subscription_id")
     private String gatewaySubscriptionId;
+
+    @Column(name = "payment_method", length = 50)
+    private String paymentMethod;
+
+    @Column(name = "card_last_four", length = 4)
+    private String cardLastFour;
+
+    @Column(name = "card_brand", length = 50)
+    private String cardBrand;
+
+    @Column(name = "delinquent_since")
+    private OffsetDateTime delinquentSince;
+
+    @Column(name = "canceled_at")
+    private OffsetDateTime canceledAt;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

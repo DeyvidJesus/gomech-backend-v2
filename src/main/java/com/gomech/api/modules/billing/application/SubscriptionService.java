@@ -114,6 +114,10 @@ public class SubscriptionService {
                 subscription.getCurrentPeriodEnd(),
                 subscription.getTrialEndsAt(),
                 subscription.isCancelAtPeriodEnd(),
+                subscription.getPaymentMethod(),
+                subscription.getCardLastFour(),
+                subscription.getCardBrand(),
+                subscription.getDelinquentSince(),
                 features
         );
     }

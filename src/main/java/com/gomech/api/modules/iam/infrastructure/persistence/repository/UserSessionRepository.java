@@ -28,4 +28,8 @@ public interface UserSessionRepository extends JpaRepository<UserSession, UUID> 
     @Modifying
     @Query("UPDATE UserSession s SET s.revoked = true, s.revokedAt = :now WHERE s.user.id = :userId AND s.revoked = false")
     int revokeAllByUserId(@Param("userId") UUID userId, @Param("now") OffsetDateTime now);
+
+    @Modifying
+    @Query("UPDATE UserSession s SET s.revoked = true, s.revokedAt = :now WHERE s.tenantId = :tenantId AND s.revoked = false")
+    int revokeAllByTenantId(@Param("tenantId") UUID tenantId, @Param("now") OffsetDateTime now);
 }

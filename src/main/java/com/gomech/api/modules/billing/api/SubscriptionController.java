@@ -32,7 +32,7 @@ public class SubscriptionController {
     }
 
     @PostMapping("/change-plan")
-    @PreAuthorize("hasAuthority('FINANCE_TRANSACTION_WRITE') or hasRole('Proprietário') or hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('BILLING_WRITE') or hasRole('Proprietário') or hasRole('ADMIN')")
     @Operation(summary = "Alterar ou contratar um novo plano de assinatura para o Tenant")
     public ResponseEntity<SubscriptionResponse> changePlan(@Valid @RequestBody ChangePlanRequest request) {
         UUID tenantId = TenantContextHolder.getTenantId();

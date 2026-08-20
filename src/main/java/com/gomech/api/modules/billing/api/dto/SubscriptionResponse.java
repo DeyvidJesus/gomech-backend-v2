@@ -39,6 +39,18 @@ public record SubscriptionResponse(
         @Schema(description = "Cancelamento agendado para o fim do período")
         boolean cancelAtPeriodEnd,
 
+        @Schema(description = "Método de pagamento ativo")
+        String paymentMethod,
+
+        @Schema(description = "Últimos 4 dígitos do cartão")
+        String cardLastFour,
+
+        @Schema(description = "Bandeira do cartão")
+        String cardBrand,
+
+        @Schema(description = "Data de início da inadimplência se houver")
+        OffsetDateTime delinquentSince,
+
         @Schema(description = "Cotas e módulos ativos concedidos pela assinatura")
         List<PlanFeatureDto> features
 ) {}

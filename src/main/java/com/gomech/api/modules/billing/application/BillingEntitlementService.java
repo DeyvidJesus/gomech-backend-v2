@@ -190,6 +190,7 @@ public class BillingEntitlementService implements EntitlementService {
         if (upper.startsWith("CRM_") && !enabledModules.contains("CRM")) return false;
         if (upper.startsWith("OPERATIONS_") && !enabledModules.contains("OPERATIONS")) return false;
         if (upper.startsWith("INVENTORY_") && !enabledModules.contains("INVENTORY")) return false;
+        if (upper.startsWith("TOOLS_") && !enabledModules.contains("TOOLS")) return false;
         if (upper.startsWith("FINANCE_") && !enabledModules.contains("FINANCE")) return false;
         if (upper.startsWith("AI_") && !enabledModules.contains("AI")) return false;
 

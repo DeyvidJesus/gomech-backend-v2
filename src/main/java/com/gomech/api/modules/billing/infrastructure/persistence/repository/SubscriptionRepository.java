@@ -13,4 +13,6 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, UUID
 
     @EntityGraph(attributePaths = {"plan", "plan.features"})
     Optional<Subscription> findByTenantId(UUID tenantId);
+
+    Optional<Subscription> findByGatewaySubscriptionId(String gatewaySubscriptionId);
 }

@@ -42,6 +42,10 @@ class ModuleArchitectureRulesTest {
         assertProductionClassesExistIn("..modules.inventory.application..");
         assertProductionClassesExistIn("..modules.inventory.domain..");
         assertProductionClassesExistIn("..modules.inventory.infrastructure..");
+        assertProductionClassesExistIn("..modules.tools.api..");
+        assertProductionClassesExistIn("..modules.tools.application..");
+        assertProductionClassesExistIn("..modules.tools.domain..");
+        assertProductionClassesExistIn("..modules.tools.infrastructure..");
         assertProductionClassesExistIn("..core..");
 
         assertTrue(

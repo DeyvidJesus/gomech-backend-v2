@@ -38,6 +38,10 @@ class ModuleArchitectureRulesTest {
         assertProductionClassesExistIn("..modules.billing.application..");
         assertProductionClassesExistIn("..modules.billing.domain..");
         assertProductionClassesExistIn("..modules.billing.infrastructure..");
+        assertProductionClassesExistIn("..modules.inventory.api..");
+        assertProductionClassesExistIn("..modules.inventory.application..");
+        assertProductionClassesExistIn("..modules.inventory.domain..");
+        assertProductionClassesExistIn("..modules.inventory.infrastructure..");
         assertProductionClassesExistIn("..core..");
 
         assertTrue(

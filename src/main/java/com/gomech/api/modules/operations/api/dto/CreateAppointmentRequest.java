@@ -24,6 +24,12 @@ public record CreateAppointmentRequest(
         @Size(max = 100, message = "O tipo de serviço deve ter no máximo 100 caracteres")
         String serviceType,
 
-        String notes
+        String notes,
+
+        UUID assignedUserId
 ) {
+    public CreateAppointmentRequest(UUID unitId, UUID customerId, UUID vehicleId, OffsetDateTime scheduledAt, OffsetDateTime estimatedEndAt, String serviceType, String notes) {
+        this(unitId, customerId, vehicleId, scheduledAt, estimatedEndAt, serviceType, notes, null);
+    }
 }
+

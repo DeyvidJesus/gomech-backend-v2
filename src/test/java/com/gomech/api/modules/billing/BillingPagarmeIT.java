@@ -2,9 +2,6 @@ package com.gomech.api.modules.billing;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gomech.api.modules.billing.api.dto.PaymentDtos;
-import com.gomech.api.modules.billing.api.dto.SubscriptionResponse;
-import com.gomech.api.modules.billing.domain.PaymentMethod;
-import com.gomech.api.modules.billing.domain.PaymentStatus;
 import com.gomech.api.modules.iam.api.dto.AuthResponse;
 import com.gomech.api.modules.iam.api.dto.RegisterWorkshopRequest;
 import org.junit.jupiter.api.DisplayName;
@@ -72,55 +69,65 @@ class BillingPagarmeIT {
     }
 
     @Test
-    @DisplayName("Complete Billing Flow: Subscription -> PIX Checkout -> Webhook order.paid -> Idempotent Replay -> Past Due Webhook -> Recovery")
-    void completeBillingAndPagarmeSubscriptionFlow() throws Exception {
-        WorkshopContext ctx = registerWorkshop("pagarme-flow");
+    @DisplayName("Complete Billing Flow: Trial Signup -> Hosted Checkout Generation -> Webhook subscription.created & charge.paid -> Active -> Past Due -> Recovery")
+    void completeHostedCheckoutAndWebhookFlow() throws Exception {
+        WorkshopContext ctx = registerWorkshop("hosted-flow");
 
-        // 1. Check initial subscription (TRIALING)
+        // 1. Check initial subscription (TRIALING, zero card entered)
         mockMvc.perform(get("/api/v1/billing/subscription")
                         .header("Authorization", "Bearer " + ctx.token())
                         .header("X-Tenant-ID", ctx.tenantId().toString()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status", is("TRIALING")));
 
-        // 2. Initiate PIX Checkout for PRO plan
-        PaymentDtos.InitiatePaymentRequest checkoutReq = PaymentDtos.InitiatePaymentRequest.builder()
+        // 2. Generate Hosted Checkout Session for PRO plan
+        PaymentDtos.CreateCheckoutRequest checkoutReq = PaymentDtos.CreateCheckoutRequest.builder()
                 .planCode("PRO")
-                .method(PaymentMethod.PIX)
-                .customerDocument("12345678909")
-                .customerPhone("11988887777")
+                .successUrl("https://gomech.app/billing?status=success")
+                .cancelUrl("https://gomech.app/billing?status=canceled")
                 .build();
 
-        String paymentJson = mockMvc.perform(post("/api/v1/billing/payments/checkout")
+        String checkoutJson = mockMvc.perform(post("/api/v1/billing/payments/checkout")
                         .header("Authorization", "Bearer " + ctx.token())
                         .header("X-Tenant-ID", ctx.tenantId().toString())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(checkoutReq)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.status", is("PENDING")))
-                .andExpect(jsonPath("$.paymentMethod", is("PIX")))
-                .andExpect(jsonPath("$.pixCopyPaste", notNullValue()))
-                .andExpect(jsonPath("$.gatewayOrderId", notNullValue()))
+                .andExpect(jsonPath("$.checkoutUrl", notNullValue()))
+                .andExpect(jsonPath("$.paymentLinkId", notNullValue()))
+                .andExpect(jsonPath("$.planCode", is("PRO")))
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
 
-        PaymentDtos.PaymentResponse payment = objectMapper.readValue(paymentJson, PaymentDtos.PaymentResponse.class);
+        PaymentDtos.CheckoutSessionResponse session = objectMapper.readValue(checkoutJson, PaymentDtos.CheckoutSessionResponse.class);
 
-        // 3. Simulate Pagar.me Webhook: order.paid
-        String webhookPayload = String.format("""
+        // 3. Simulate Pagar.me Webhook: subscription.created
+        String subCreatedPayload = String.format("""
                 {
-                    "id": "evt_test_%s",
-                    "type": "order.paid",
+                    "id": "evt_sub_created_%s",
+                    "type": "subscription.created",
                     "data": {
-                        "id": "%s",
-                        "charges": [{"id": "%s"}]
+                        "id": "sub_gw_12345",
+                        "status": "active",
+                        "payment_link_id": "%s",
+                        "metadata": {
+                            "tenant_id": "%s",
+                            "plan_code": "PRO"
+                        },
+                        "customer": {
+                            "id": "cus_12345"
+                        },
+                        "card": {
+                            "brand": "Mastercard",
+                            "last_four_digits": "5678"
+                        }
                     }
                 }
-                """, UUID.randomUUID(), payment.gatewayOrderId(), payment.gatewayChargeId());
+                """, UUID.randomUUID(), session.paymentLinkId(), ctx.tenantId());
 
         mockMvc.perform(post("/api/v1/billing/webhooks/pagarme")
-                        .header("X-Pagarme-Signature", "test-valid-signature")
+                        .header("X-Pagarme-Signature", "test-signature")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(webhookPayload))
+                        .content(subCreatedPayload))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.processed", is(true)));
 
@@ -129,30 +136,32 @@ class BillingPagarmeIT {
                         .header("Authorization", "Bearer " + ctx.token())
                         .header("X-Tenant-ID", ctx.tenantId().toString()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status", is("ACTIVE")));
+                .andExpect(jsonPath("$.status", is("ACTIVE")))
+                .andExpect(jsonPath("$.cardBrand", is("Mastercard")))
+                .andExpect(jsonPath("$.cardLastFour", is("5678")));
 
         // 5. Test Webhook Idempotency (replay same payload)
         mockMvc.perform(post("/api/v1/billing/webhooks/pagarme")
-                        .header("X-Pagarme-Signature", "test-valid-signature")
+                        .header("X-Pagarme-Signature", "test-signature")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(webhookPayload))
+                        .content(subCreatedPayload))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.processed", is(true)));
 
-        // 6. Simulate Webhook: invoice.payment_failed -> Subscription becomes PAST_DUE
+        // 6. Simulate Webhook: charge.payment_failed -> Subscription becomes PAST_DUE
         String failedWebhookPayload = String.format("""
                 {
                     "id": "evt_test_failed_%s",
-                    "type": "invoice.payment_failed",
+                    "type": "charge.payment_failed",
                     "data": {
-                        "id": "%s",
-                        "charges": [{"id": "%s"}]
+                        "id": "ch_failed_123",
+                        "payment_link_id": "%s"
                     }
                 }
-                """, UUID.randomUUID(), payment.gatewayOrderId(), payment.gatewayChargeId());
+                """, UUID.randomUUID(), session.paymentLinkId());
 
         mockMvc.perform(post("/api/v1/billing/webhooks/pagarme")
-                        .header("X-Pagarme-Signature", "test-valid-signature")
+                        .header("X-Pagarme-Signature", "test-signature")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(failedWebhookPayload))
                 .andExpect(status().isOk());
@@ -163,24 +172,31 @@ class BillingPagarmeIT {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status", is("PAST_DUE")));
 
-        // 7. Recover Subscription with instant Card Checkout
-        PaymentDtos.InitiatePaymentRequest cardReq = PaymentDtos.InitiatePaymentRequest.builder()
-                .planCode("PRO")
-                .method(PaymentMethod.CREDIT_CARD)
-                .cardNumber("4242424242424242")
-                .cardHolderName("OFICINA RECUPERADA")
-                .cardExpMonth(12)
-                .cardExpYear(2030)
-                .cardCvv("999")
-                .build();
+        // 7. Simulate Webhook: charge.paid -> Subscription recovered to ACTIVE
+        String paidWebhookPayload = String.format("""
+                {
+                    "id": "evt_test_paid_%s",
+                    "type": "charge.paid",
+                    "data": {
+                        "id": "ch_recovered_123",
+                        "order_id": "or_recovered_123",
+                        "payment_link_id": "%s",
+                        "amount": 19900,
+                        "last_transaction": {
+                            "card": {
+                                "brand": "Visa",
+                                "last_four_digits": "4242"
+                            }
+                        }
+                    }
+                }
+                """, UUID.randomUUID(), session.paymentLinkId());
 
-        mockMvc.perform(post("/api/v1/billing/payments/checkout")
-                        .header("Authorization", "Bearer " + ctx.token())
-                        .header("X-Tenant-ID", ctx.tenantId().toString())
+        mockMvc.perform(post("/api/v1/billing/webhooks/pagarme")
+                        .header("X-Pagarme-Signature", "test-signature")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(cardReq)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.status", is("PAID")));
+                        .content(paidWebhookPayload))
+                .andExpect(status().isOk());
 
         // Verify Subscription recovered to ACTIVE
         mockMvc.perform(get("/api/v1/billing/subscription")

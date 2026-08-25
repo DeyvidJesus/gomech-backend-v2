@@ -13,6 +13,9 @@ import java.util.UUID;
 @Repository
 public interface QuoteRepository extends JpaRepository<Quote, UUID>, JpaSpecificationExecutor<Quote> {
 
+    @Query("SELECT q FROM Quote q LEFT JOIN FETCH q.items WHERE q.id = :id")
+    Optional<Quote> findByIdWithItems(@Param("id") UUID id);
+
     @Query("SELECT q FROM Quote q LEFT JOIN FETCH q.items WHERE q.id = :id AND q.tenantId = :tenantId")
     Optional<Quote> findByIdWithItems(@Param("id") UUID id, @Param("tenantId") UUID tenantId);
 

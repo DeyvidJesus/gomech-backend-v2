@@ -26,6 +26,21 @@ public class Tenant {
     @Column(nullable = false, unique = true)
     private String cnpj;
 
+    @Column(name = "trade_name")
+    private String tradeName;
+
+    private String email;
+
+    private String phone;
+
+    @Column(name = "logo_url")
+    private String logoUrl;
+
+    private String address;
+
+    @Column(name = "gateway_customer_id", length = 100)
+    private String gatewayCustomerId;
+
     @Column(nullable = false)
     private String status = "ACTIVE"; // ACTIVE, SUSPENDED, CANCELED
 
@@ -69,6 +84,46 @@ public class Tenant {
         this.cnpj = cnpj;
     }
 
+    public String getTradeName() {
+        return tradeName;
+    }
+
+    public void setTradeName(String tradeName) {
+        this.tradeName = tradeName;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public String getLogoUrl() {
+        return logoUrl;
+    }
+
+    public void setLogoUrl(String logoUrl) {
+        this.logoUrl = logoUrl;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
     public String getStatus() {
         return status;
     }
@@ -83,6 +138,14 @@ public class Tenant {
 
     public void setCreatedAt(OffsetDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getGatewayCustomerId() {
+        return gatewayCustomerId;
+    }
+
+    public void setGatewayCustomerId(String gatewayCustomerId) {
+        this.gatewayCustomerId = gatewayCustomerId;
     }
 
     public OffsetDateTime getUpdatedAt() {

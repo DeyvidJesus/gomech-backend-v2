@@ -72,6 +72,7 @@ public class AppointmentService {
         appointment.setStatus(AppointmentStatus.SCHEDULED);
         appointment.setServiceType(request.serviceType() != null ? request.serviceType().trim() : null);
         appointment.setNotes(request.notes() != null ? request.notes().trim() : null);
+        appointment.setAssignedUserId(request.assignedUserId());
 
         Appointment saved = appointmentRepository.save(appointment);
         log.info("Agendamento {} criado com sucesso para o cliente {} e veículo {} na unidade {}",
@@ -292,7 +293,8 @@ public class AppointmentService {
                 appointment.getScheduledAt(),
                 appointment.getEstimatedEndAt(),
                 appointment.getStatus(),
-                appointment.getServiceType()
+                appointment.getServiceType(),
+                appointment.getAssignedUserId()
         );
     }
 

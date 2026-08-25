@@ -43,6 +43,9 @@ public class BillingPlan {
     @Column(name = "is_active", nullable = false)
     private boolean active = true;
 
+    @Column(name = "pagarme_plan_id", length = 100)
+    private String pagarmePlanId;
+
     @OneToMany(mappedBy = "plan", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<BillingPlanFeature> features = new ArrayList<>();
 

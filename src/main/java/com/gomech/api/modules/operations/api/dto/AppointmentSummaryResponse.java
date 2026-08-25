@@ -17,6 +17,8 @@ public record AppointmentSummaryResponse(
         OffsetDateTime scheduledAt,
         OffsetDateTime estimatedEndAt,
         AppointmentStatus status,
-        String serviceType
+        String serviceType,
+        UUID assignedUserId
 ) {
 }
+

@@ -42,6 +42,12 @@ jwt:
   expiration: 900000 # 15 minutos em ms
   refresh-expiration: 604800000 # 7 dias em ms
 
+pagarme:
+  api-key: ${PAGARME_API_KEY:sk_test_gomech_placeholder}
+  api-url: ${PAGARME_API_URL:https://api.pagar.me/core/v5}
+  webhook-secret: ${PAGARME_WEBHOOK_SECRET:whsec_gomech_placeholder}
+  mock-enabled: ${PAGARME_MOCK_ENABLED:false}
+
 logging:
   pattern:
     # Injects the correlation id into Spring Boot's default layout instead of replacing it, so every

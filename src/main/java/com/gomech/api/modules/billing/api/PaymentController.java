@@ -22,7 +22,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/billing/payments")
 @RequiredArgsConstructor
-@Tag(name = "Billing - Pagamentos & Checkout", description = "Iniciação de pagamentos via Pagar.me (PIX, Cartão e Boleto)")
+@Tag(name = "Billing - Pagamentos & Hosted Checkout", description = "Iniciação de pagamentos e Hosted Checkout via Pagar.me V5")
 @SecurityRequirement(name = "bearerAuth")
 public class PaymentController {
 
@@ -30,12 +30,22 @@ public class PaymentController {
 
     @PostMapping("/checkout")
     @PreAuthorize("hasAuthority('BILLING_WRITE') or hasRole('Proprietário') or hasRole('ADMIN')")
-    @Operation(summary = "Iniciar pagamento ou assinatura via Pagar.me (PIX, Cartão, Boleto)")
-    public ResponseEntity<PaymentDtos.PaymentResponse> checkout(
-            @Valid @RequestBody PaymentDtos.InitiatePaymentRequest request
+    @Operation(summary = "Criar sessão e gerar link oficial do Pagar.me Hosted Checkout")
+    public ResponseEntity<PaymentDtos.CheckoutSessionResponse> checkout(
+            @Valid @RequestBody PaymentDtos.CreateCheckoutRequest request
     ) {
         UUID tenantId = TenantContextHolder.getTenantId();
-        return ResponseEntity.status(HttpStatus.CREATED).body(paymentService.initiatePayment(tenantId, request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(paymentService.createHostedCheckoutSession(tenantId, request));
+    }
+
+    @PostMapping("/checkout-session")
+    @PreAuthorize("hasAuthority('BILLING_WRITE') or hasRole('Proprietário') or hasRole('ADMIN')")
+    @Operation(summary = "Gerar link de checkout hospedado no ambiente da Pagar.me (Alias)")
+    public ResponseEntity<PaymentDtos.CheckoutSessionResponse> createCheckoutSession(
+            @Valid @RequestBody PaymentDtos.CreateCheckoutRequest request
+    ) {
+        UUID tenantId = TenantContextHolder.getTenantId();
+        return ResponseEntity.status(HttpStatus.CREATED).body(paymentService.createHostedCheckoutSession(tenantId, request));
     }
 
     @GetMapping

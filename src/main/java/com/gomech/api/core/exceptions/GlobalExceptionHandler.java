@@ -15,7 +15,7 @@ import java.util.List;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    private static final String ERROR_TYPE_BASE = "https://gomech.com/docs/errors/";
+    private static final String ERROR_TYPE_BASE = "https://gomech.com.br/docs/errors/";
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ProblemDetail handleValidationExceptions(MethodArgumentNotValidException ex) {
@@ -53,6 +53,26 @@ public class GlobalExceptionHandler {
         return problemDetail;
     }
 
+    @ExceptionHandler(IllegalStateException.class)
+    public ProblemDetail handleIllegalStateException(IllegalStateException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_GATEWAY, ex.getMessage()
+        );
+        problemDetail.setTitle("Operação Indisponível");
+        problemDetail.setType(URI.create(ERROR_TYPE_BASE + "service-unavailable"));
+        return problemDetail;
+    }
+
+    @ExceptionHandler(org.springframework.web.client.RestClientResponseException.class)
+    public ProblemDetail handleRestClientResponseException(org.springframework.web.client.RestClientResponseException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_GATEWAY, "Erro na integração com gateway de pagamento: " + ex.getResponseBodyAsString()
+        );
+        problemDetail.setTitle("Gateway Error");
+        problemDetail.setType(URI.create(ERROR_TYPE_BASE + "gateway-error"));
+        return problemDetail;
+    }
+
     @ExceptionHandler(OptimisticLockingFailureException.class)
     public ProblemDetail handleOptimisticLockingFailureException(OptimisticLockingFailureException ex) {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
@@ -60,6 +80,20 @@ public class GlobalExceptionHandler {
         );
         problemDetail.setTitle("Conflict");
         problemDetail.setType(URI.create(ERROR_TYPE_BASE + "concurrency-conflict"));
+        return problemDetail;
+    }
+
+    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+    public ProblemDetail handleDataIntegrityViolation(org.springframework.dao.DataIntegrityViolationException ex) {
+        String msg = "Já existe um registro com estes dados no sistema (CNPJ, e-mail ou documento duplicado).";
+        if (ex.getMessage() != null && ex.getMessage().contains("tenants_cnpj_key")) {
+            msg = "Já existe uma oficina cadastrada com este CNPJ. Acesse a tela de Login para entrar na sua conta.";
+        } else if (ex.getMessage() != null && ex.getMessage().contains("users_email_key")) {
+            msg = "Este e-mail já está cadastrado. Acesse a tela de Login para entrar na sua conta.";
+        }
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, msg);
+        problemDetail.setTitle("Registro Duplicado");
+        problemDetail.setType(URI.create(ERROR_TYPE_BASE + "duplicate-resource"));
         return problemDetail;
     }
 

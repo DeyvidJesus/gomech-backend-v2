@@ -61,6 +61,9 @@ public class Payment {
     @Column(name = "gateway_payment_id", length = 100)
     private String gatewayPaymentId;
 
+    @Column(name = "gateway_payment_link_id", length = 100)
+    private String gatewayPaymentLinkId;
+
     @Column(name = "pix_qr_code", columnDefinition = "TEXT")
     private String pixQrCode;
 

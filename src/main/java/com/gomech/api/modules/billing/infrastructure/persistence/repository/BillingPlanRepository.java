@@ -16,6 +16,9 @@ public interface BillingPlanRepository extends JpaRepository<BillingPlan, UUID> 
     Optional<BillingPlan> findByCode(String code);
 
     @EntityGraph(attributePaths = {"features"})
+    Optional<BillingPlan> findByPagarmePlanId(String pagarmePlanId);
+
+    @EntityGraph(attributePaths = {"features"})
     List<BillingPlan> findAllByActiveTrue();
 
     @Override

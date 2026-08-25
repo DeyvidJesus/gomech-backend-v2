@@ -15,4 +15,8 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, UUID
     Optional<Subscription> findByTenantId(UUID tenantId);
 
     Optional<Subscription> findByGatewaySubscriptionId(String gatewaySubscriptionId);
+
+    Optional<Subscription> findByGatewayPaymentLinkId(String gatewayPaymentLinkId);
+
+    Optional<Subscription> findByGatewayCustomerId(String gatewayCustomerId);
 }

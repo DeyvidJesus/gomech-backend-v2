@@ -33,8 +33,10 @@ public class UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final UnitRepository unitRepository;
+    private final com.gomech.api.modules.iam.infrastructure.persistence.repository.TenantRepository tenantRepository;
     private final PasswordEncoder passwordEncoder;
     private final EntitlementService entitlementService;
+    private final com.gomech.api.core.notification.ResendEmailService emailService;
 
     @Transactional(readOnly = true)
     public List<UserResponse> getUsers(UUID tenantId) {
@@ -113,6 +115,14 @@ public class UserService {
 
         User savedUser = userRepository.save(user);
         entitlementService.recordUsage(tenantId, QuotaDimension.USERS, 1);
+
+        try {
+            String workshopName = tenantRepository.findById(tenantId).map(t -> t.getTradeName() != null ? t.getTradeName() : t.getName()).orElse("GoMech Oficina");
+            emailService.sendWelcomeUserEmail(savedUser.getEmail(), savedUser.getName(), workshopName, request.password());
+        } catch (Exception ex) {
+            log.warn("Falha não bloqueante ao enviar e-mail de boas-vindas para {}: {}", savedUser.getEmail(), ex.getMessage());
+        }
+
         return toResponse(savedUser);
     }
 
@@ -160,6 +170,13 @@ public class UserService {
 
         user.getUserRoles().add(userRole);
         User savedUser = userRepository.save(user);
+
+        try {
+            emailService.sendRoleUpdateNotification(savedUser.getEmail(), savedUser.getName(), role.getName());
+        } catch (Exception ex) {
+            log.warn("Falha não bloqueante ao enviar e-mail de atualização de papel para {}: {}", savedUser.getEmail(), ex.getMessage());
+        }
+
         return toResponse(savedUser);
     }
 

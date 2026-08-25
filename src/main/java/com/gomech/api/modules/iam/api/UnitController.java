@@ -55,4 +55,17 @@ public class UnitController {
         UnitResponse response = unitService.createUnit(request, TenantContextHolder.getTenantId());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
+
+    @Operation(summary = "Atualizar unidade/filial", description = "Atualiza dados de uma filial existente da oficina.")
+    @ApiResponse(responseCode = "200", description = "Unidade atualizada com sucesso")
+    @PreAuthorize("hasAuthority('IAM_UNIT_WRITE') or hasRole('Proprietário')")
+    @PutMapping("/{id}")
+    public ResponseEntity<UnitResponse> updateUnit(
+            @PathVariable UUID id,
+            @Valid @RequestBody com.gomech.api.modules.iam.api.dto.UpdateUnitRequest request
+    ) {
+        UnitResponse response = unitService.updateUnit(id, request, TenantContextHolder.getTenantId());
+        return ResponseEntity.ok(response);
+    }
 }
+

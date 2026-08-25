@@ -60,16 +60,35 @@ public class OnboardingService {
         // Estabelece o Tenant no contexto para viabilizar as inserções subsequentes
         TenantContextHolder.setTenantId(newTenantId);
 
-        if (userRepository.existsByEmail(request.email())) {
-            throw new IllegalArgumentException("E-mail já cadastrado");
+        if (userRepository.existsByEmail(request.email().toLowerCase().trim())) {
+            throw new IllegalArgumentException("Este e-mail (" + request.email() + ") já está cadastrado. Acesse a tela de Login com suas credenciais.");
+        }
+
+        String rawCnpj = request.cnpj() != null ? request.cnpj().replaceAll("\\D", "") : "";
+        String formattedCnpj = null;
+        if (!rawCnpj.isBlank() && rawCnpj.length() == 14) {
+            formattedCnpj = String.format("%s.%s.%s/%s-%s",
+                    rawCnpj.substring(0, 2), rawCnpj.substring(2, 5), rawCnpj.substring(5, 8),
+                    rawCnpj.substring(8, 12), rawCnpj.substring(12, 14));
+            if (tenantRepository.existsByCnpj(formattedCnpj)) {
+                throw new IllegalArgumentException("Já existe uma oficina cadastrada com o CNPJ " + formattedCnpj + ". Acesse a tela de Login para entrar.");
+            }
         }
 
         // 1. Criar Tenant
         Tenant tenant = new Tenant();
         tenant.setId(newTenantId);
         tenant.setName(request.workshopName());
-        // Mocking CNPJ provisório se não informado
-        tenant.setCnpj("00.000.000/" + newTenantId.toString().substring(0, 4) + "-00");
+        tenant.setTradeName(request.workshopName());
+        tenant.setEmail(request.email());
+        tenant.setPhone(request.phone());
+        tenant.setAddress(request.address());
+
+        if (formattedCnpj != null) {
+            tenant.setCnpj(formattedCnpj);
+        } else {
+            tenant.setCnpj("00.000.000/" + newTenantId.toString().substring(0, 4) + "-00");
+        }
         tenant = tenantRepository.save(tenant);
 
         // Publicar evento de domínio de criação de Tenant para Billing e outros módulos
@@ -80,6 +99,7 @@ public class OnboardingService {
         unit.setTenantId(newTenantId);
         unit.setName("Matriz");
         unit.setAddress(request.address());
+        unit.setPhone(request.phone());
         unit.setHeadquarters(true);
         unit = unitRepository.save(unit);
 

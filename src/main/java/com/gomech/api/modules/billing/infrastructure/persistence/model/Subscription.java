@@ -62,6 +62,9 @@ public class Subscription {
     @Column(name = "gateway_subscription_id")
     private String gatewaySubscriptionId;
 
+    @Column(name = "gateway_payment_link_id", length = 100)
+    private String gatewayPaymentLinkId;
+
     @Column(name = "payment_method", length = 50)
     private String paymentMethod;
 

@@ -3,7 +3,7 @@ package com.gomech.api.modules.billing.api.dto;
 import com.gomech.api.modules.billing.domain.PaymentMethod;
 import com.gomech.api.modules.billing.domain.PaymentStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Builder;
 
 import java.math.BigDecimal;
@@ -14,41 +14,36 @@ import java.util.UUID;
 public class PaymentDtos {
 
     @Builder
-    @Schema(description = "Requisição para iniciar pagamento de plano/assinatura")
-    public record InitiatePaymentRequest(
-            @Schema(description = "Código do plano a ser contratado", example = "PRO")
+    @Schema(description = "Requisição para criação de sessão de checkout hospedado Pagar.me")
+    public record CreateCheckoutRequest(
+            @NotBlank
+            @Schema(description = "Código do plano a ser assinado", example = "PRO")
             String planCode,
 
-            @NotNull
-            @Schema(description = "Método de pagamento", example = "PIX")
-            PaymentMethod method,
+            @Schema(description = "URL de retorno com sucesso")
+            String successUrl,
 
-            @Schema(description = "Número do cartão de crédito")
-            String cardNumber,
+            @Schema(description = "URL de retorno em caso de cancelamento")
+            String cancelUrl
+    ) {}
 
-            @Schema(description = "Nome impresso no cartão")
-            String cardHolderName,
+    @Builder
+    @Schema(description = "Resposta com URL oficial do checkout hospedado Pagar.me")
+    public record CheckoutSessionResponse(
+            @Schema(description = "URL de redirecionamento para o checkout hospedado Pagar.me")
+            String checkoutUrl,
 
-            @Schema(description = "Mês de expiração do cartão", example = "12")
-            Integer cardExpMonth,
+            @Schema(description = "Código do plano")
+            String planCode,
 
-            @Schema(description = "Ano de expiração do cartão", example = "2028")
-            Integer cardExpYear,
+            @Schema(description = "Preço mensal do plano")
+            BigDecimal price,
 
-            @Schema(description = "Código de segurança CVV", example = "123")
-            String cardCvv,
+            @Schema(description = "ID do link de pagamento gerado")
+            String paymentLinkId,
 
-            @Schema(description = "Token pré-gerado do cartão (se houver)")
-            String cardToken,
-
-            @Schema(description = "Número de parcelas (para cartão)", example = "1")
-            Integer installments,
-
-            @Schema(description = "CPF ou CNPJ do pagador para emissão de NF e Boleto/PIX")
-            String customerDocument,
-
-            @Schema(description = "Telefone de contato do pagador")
-            String customerPhone
+            @Schema(description = "ID da transação/ordem de pagamento local")
+            UUID paymentId
     ) {}
 
     @Builder
@@ -65,6 +60,7 @@ public class PaymentDtos {
             String gatewayOrderId,
             String gatewayChargeId,
             String gatewayPaymentId,
+            String gatewayPaymentLinkId,
             String pixQrCode,
             String pixQrCodeUrl,
             String pixCopyPaste,
@@ -79,6 +75,7 @@ public class PaymentDtos {
     ) {}
 
     @Builder
+    @Schema(description = "Requisição para cancelamento de assinatura")
     public record CancelSubscriptionRequest(
             String reason
     ) {}

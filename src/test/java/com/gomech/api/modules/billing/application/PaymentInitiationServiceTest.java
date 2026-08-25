@@ -1,9 +1,6 @@
 package com.gomech.api.modules.billing.application;
 
 import com.gomech.api.modules.billing.api.dto.PaymentDtos;
-import com.gomech.api.modules.billing.domain.PaymentMethod;
-import com.gomech.api.modules.billing.domain.PaymentStatus;
-import com.gomech.api.modules.billing.domain.SubscriptionStatus;
 import com.gomech.api.modules.billing.application.gateway.PagarmeGatewayClient;
 import com.gomech.api.modules.billing.infrastructure.gateway.PagarmeDto;
 import com.gomech.api.modules.billing.infrastructure.persistence.model.BillingPlan;
@@ -12,6 +9,8 @@ import com.gomech.api.modules.billing.infrastructure.persistence.model.Subscript
 import com.gomech.api.modules.billing.infrastructure.persistence.repository.BillingPlanRepository;
 import com.gomech.api.modules.billing.infrastructure.persistence.repository.PaymentRepository;
 import com.gomech.api.modules.billing.infrastructure.persistence.repository.SubscriptionRepository;
+import com.gomech.api.modules.iam.infrastructure.persistence.model.Tenant;
+import com.gomech.api.modules.iam.infrastructure.persistence.repository.TenantRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,10 +18,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.context.ApplicationEventPublisher;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.Optional;
 import java.util.UUID;
@@ -48,13 +45,10 @@ class PaymentInitiationServiceTest {
     private PaymentRepository paymentRepository;
 
     @Mock
+    private TenantRepository tenantRepository;
+
+    @Mock
     private PagarmeGatewayClient pagarmeClient;
-
-    @Mock
-    private DelinquencyService delinquencyService;
-
-    @Mock
-    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private PaymentInitiationService paymentService;
@@ -62,90 +56,71 @@ class PaymentInitiationServiceTest {
     private UUID tenantId;
     private Subscription subscription;
     private BillingPlan proPlan;
+    private Tenant tenant;
 
     @BeforeEach
     void setUp() {
         tenantId = UUID.randomUUID();
 
+        tenant = new Tenant();
+        tenant.setId(tenantId);
+        tenant.setName("Oficina Turbo Power");
+        tenant.setEmail("contato@turbopower.com.br");
+        tenant.setCnpj("12.345.678/0001-90");
+
         proPlan = new BillingPlan();
         proPlan.setCode("PRO");
-        proPlan.setName("Profissional");
-        proPlan.setPrice(BigDecimal.valueOf(199.90));
+        proPlan.setName("GoMech Pro");
+        proPlan.setPrice(BigDecimal.valueOf(199.00));
+        proPlan.setPagarmePlanId("plan_veoYEdYhdxU9qJ9X");
 
         subscription = new Subscription();
         subscription.setTenantId(tenantId);
         subscription.setPlan(proPlan);
         subscription.setPlanCode("PRO");
-        subscription.setStatus(SubscriptionStatus.TRIALING.name());
+        subscription.setStatus("TRIALING");
     }
 
     @Test
-    @DisplayName("Should initiate PIX payment and return QR Code and Copy/Paste code")
-    void shouldInitiatePixPaymentSuccessfully() {
-        PaymentDtos.InitiatePaymentRequest request = PaymentDtos.InitiatePaymentRequest.builder()
+    @DisplayName("Should generate Pagar.me Hosted Checkout session successfully")
+    void shouldCreateHostedCheckoutSessionSuccessfully() {
+        PaymentDtos.CreateCheckoutRequest request = PaymentDtos.CreateCheckoutRequest.builder()
                 .planCode("PRO")
-                .method(PaymentMethod.PIX)
-                .customerDocument("12345678900")
+                .successUrl("https://gomech.app/billing?status=success")
+                .cancelUrl("https://gomech.app/billing?status=canceled")
                 .build();
 
-        PagarmeDto.GatewayPaymentResult gwResult = PagarmeDto.GatewayPaymentResult.builder()
-                .gatewayOrderId("or_12345")
-                .gatewayChargeId("ch_12345")
-                .status("pending")
-                .paymentMethod("PIX")
-                .amount(BigDecimal.valueOf(199.90))
-                .pixQrCode("base64_qr")
-                .pixCopyPaste("0002012658...")
-                .pixExpiresAt(OffsetDateTime.now().plusDays(1))
+        PagarmeDto.PaymentLinkResponse linkResponse = PagarmeDto.PaymentLinkResponse.builder()
+                .id("pl_test12345678")
+                .url("https://checkout.pagar.me/pl_test12345678")
+                .status("active")
+                .type("subscription")
+                .planId("plan_veoYEdYhdxU9qJ9X")
+                .createdAt(OffsetDateTime.now())
+                .build();
+
+        PagarmeDto.CustomerResponse custResponse = PagarmeDto.CustomerResponse.builder()
+                .id("cus_test999")
+                .name("Oficina Turbo Power")
+                .email("contato@turbopower.com.br")
                 .build();
 
         when(subscriptionRepository.findByTenantId(tenantId)).thenReturn(Optional.of(subscription));
         when(planRepository.findByCode("PRO")).thenReturn(Optional.of(proPlan));
-        when(pagarmeClient.initiatePayment(any())).thenReturn(gwResult);
+        when(tenantRepository.findById(tenantId)).thenReturn(Optional.of(tenant));
+        when(pagarmeClient.createOrGetCustomer(any())).thenReturn(custResponse);
+        when(pagarmeClient.createHostedCheckout(any())).thenReturn(linkResponse);
         when(paymentRepository.save(any(Payment.class))).thenAnswer(i -> i.getArgument(0));
 
-        PaymentDtos.PaymentResponse response = paymentService.initiatePayment(tenantId, request);
+        PaymentDtos.CheckoutSessionResponse response = paymentService.createHostedCheckoutSession(tenantId, request);
 
         assertThat(response).isNotNull();
-        assertThat(response.status()).isEqualTo(PaymentStatus.PENDING);
-        assertThat(response.paymentMethod()).isEqualTo(PaymentMethod.PIX);
-        assertThat(response.pixCopyPaste()).isEqualTo("0002012658...");
+        assertThat(response.checkoutUrl()).isEqualTo("https://checkout.pagar.me/pl_test12345678");
+        assertThat(response.paymentLinkId()).isEqualTo("pl_test12345678");
+        assertThat(response.planCode()).isEqualTo("PRO");
+        assertThat(response.price()).isEqualByComparingTo(BigDecimal.valueOf(199.00));
+
         verify(paymentRepository).save(any(Payment.class));
-    }
-
-    @Test
-    @DisplayName("Should initiate Credit Card payment, approve instantly, activate subscription and recover delinquency")
-    void shouldInitiateCreditCardPaymentAndActivateSubscription() {
-        PaymentDtos.InitiatePaymentRequest request = PaymentDtos.InitiatePaymentRequest.builder()
-                .planCode("PRO")
-                .method(PaymentMethod.CREDIT_CARD)
-                .cardNumber("4242424242424242")
-                .cardHolderName("OFICINA TESTE")
-                .cardExpMonth(12)
-                .cardExpYear(2028)
-                .cardCvv("123")
-                .build();
-
-        PagarmeDto.GatewayPaymentResult gwResult = PagarmeDto.GatewayPaymentResult.builder()
-                .gatewayOrderId("or_card_999")
-                .gatewayChargeId("ch_card_999")
-                .status("paid")
-                .paymentMethod("CREDIT_CARD")
-                .amount(BigDecimal.valueOf(199.90))
-                .cardLastFour("4242")
-                .cardBrand("VISA")
-                .build();
-
-        when(subscriptionRepository.findByTenantId(tenantId)).thenReturn(Optional.of(subscription));
-        when(planRepository.findByCode("PRO")).thenReturn(Optional.of(proPlan));
-        when(pagarmeClient.initiatePayment(any())).thenReturn(gwResult);
-        when(paymentRepository.save(any(Payment.class))).thenAnswer(i -> i.getArgument(0));
-
-        PaymentDtos.PaymentResponse response = paymentService.initiatePayment(tenantId, request);
-
-        assertThat(response).isNotNull();
-        assertThat(response.status()).isEqualTo(PaymentStatus.PAID);
-        assertThat(subscription.getStatus()).isEqualTo(SubscriptionStatus.ACTIVE.name());
-        verify(delinquencyService).recoverDelinquency(tenantId);
+        verify(subscriptionRepository).save(subscription);
     }
 }

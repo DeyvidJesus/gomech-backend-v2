@@ -32,6 +32,12 @@ public class Unit {
 
     private String phone;
 
+    @Column(name = "logo_url")
+    private String logoUrl;
+
+    @Column(name = "technical_manager")
+    private String technicalManager;
+
     @Column(name = "is_headquarters")
     private boolean headquarters;
 
@@ -89,6 +95,22 @@ public class Unit {
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    public String getLogoUrl() {
+        return logoUrl;
+    }
+
+    public void setLogoUrl(String logoUrl) {
+        this.logoUrl = logoUrl;
+    }
+
+    public String getTechnicalManager() {
+        return technicalManager;
+    }
+
+    public void setTechnicalManager(String technicalManager) {
+        this.technicalManager = technicalManager;
     }
 
     public boolean isHeadquarters() {

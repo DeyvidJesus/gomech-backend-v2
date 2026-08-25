@@ -6,6 +6,7 @@ import com.gomech.api.core.entitlement.domain.QuotaDimension;
 import com.gomech.api.core.entitlement.domain.QuotaExceededException;
 import com.gomech.api.core.tenancy.TenantContextHolder;
 import com.gomech.api.modules.iam.api.dto.CreateUnitRequest;
+import com.gomech.api.modules.iam.api.dto.UpdateUnitRequest;
 import com.gomech.api.modules.iam.api.dto.UnitResponse;
 import com.gomech.api.modules.iam.infrastructure.persistence.model.Unit;
 import com.gomech.api.modules.iam.infrastructure.persistence.repository.UnitRepository;
@@ -84,11 +85,46 @@ public class UnitService {
         return toResponse(savedUnit);
     }
 
+    @Transactional
+    public UnitResponse updateUnit(UUID unitId, UpdateUnitRequest request, UUID tenantId) {
+        UUID effectiveTenantId = tenantId != null ? tenantId : TenantContextHolder.getTenantId();
+        Unit unit = unitRepository.findById(unitId)
+                .orElseThrow(() -> new IllegalArgumentException("Unidade não encontrada: " + unitId));
+
+        if (!unit.getTenantId().equals(effectiveTenantId)) {
+            throw new IllegalArgumentException("Unidade não pertence à oficina autenticada");
+        }
+
+        if (request.isHeadquarters() && !unit.isHeadquarters()) {
+            List<Unit> existingUnits = unitRepository.findAllByTenantId(effectiveTenantId);
+            for (Unit u : existingUnits) {
+                if (u.isHeadquarters() && !u.getId().equals(unitId)) {
+                    u.setHeadquarters(false);
+                    unitRepository.save(u);
+                }
+            }
+        }
+
+        unit.setName(request.name());
+        unit.setAddress(request.address());
+        unit.setPhone(request.phone());
+        unit.setLogoUrl(request.logoUrl());
+        unit.setTechnicalManager(request.technicalManager());
+        unit.setHeadquarters(request.isHeadquarters());
+
+        Unit updated = unitRepository.save(unit);
+        log.info("Unidade '{}' ({}) atualizada com sucesso para o tenant {}", updated.getName(), updated.getId(), effectiveTenantId);
+        return toResponse(updated);
+    }
+
     private UnitResponse toResponse(Unit unit) {
         return new UnitResponse(
                 unit.getId(),
                 unit.getName(),
                 unit.getAddress(),
+                unit.getPhone(),
+                unit.getLogoUrl(),
+                unit.getTechnicalManager(),
                 unit.isHeadquarters(),
                 unit.getTenantId()
         );

@@ -21,7 +21,11 @@ public interface PaymentRepository extends JpaRepository<Payment, UUID> {
 
     Optional<Payment> findByGatewayPaymentId(String gatewayPaymentId);
 
+    Optional<Payment> findByGatewayPaymentLinkId(String gatewayPaymentLinkId);
+
     Page<Payment> findAllByTenantId(UUID tenantId, Pageable pageable);
+
+    List<Payment> findAllByTenantIdAndStatus(UUID tenantId, com.gomech.api.modules.billing.domain.PaymentStatus status);
 
     List<Payment> findAllBySubscriptionIdOrderByCreatedAtDesc(UUID subscriptionId);
 }

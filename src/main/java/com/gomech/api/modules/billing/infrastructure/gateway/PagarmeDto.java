@@ -1,11 +1,11 @@
 package com.gomech.api.modules.billing.infrastructure.gateway;
 
-import com.gomech.api.modules.billing.domain.PaymentMethod;
 import lombok.Builder;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public class PagarmeDto {
@@ -15,52 +15,54 @@ public class PagarmeDto {
             String name,
             String email,
             String document,
+            String documentType, // CPF or CNPJ
+            String type, // individual or company
             String phone
     ) {}
 
     @Builder
-    public record CardDetails(
-            String number,
-            String holderName,
-            int expMonth,
-            int expYear,
-            String cvv
+    public record CustomerResponse(
+            String id,
+            String name,
+            String email,
+            String document,
+            String type
     ) {}
 
     @Builder
-    public record CreatePaymentRequest(
+    public record CreateHostedCheckoutRequest(
             UUID tenantId,
             UUID subscriptionId,
-            BigDecimal amount,
-            PaymentMethod method,
-            String customerName,
-            String customerEmail,
-            String customerDocument,
-            String customerPhone,
-            CardDetails cardDetails,
-            String cardToken,
-            Integer installments,
-            LocalDate boletoDueDate
+            String pagarmePlanId,
+            String customerId,
+            String planCode,
+            BigDecimal price,
+            String successUrl,
+            String cancelUrl,
+            Map<String, String> metadata
     ) {}
 
     @Builder
-    public record GatewayPaymentResult(
-            String gatewayOrderId,
-            String gatewayChargeId,
-            String gatewayPaymentId,
-            String status, // paid, pending, failed, canceled
-            String paymentMethod,
-            BigDecimal amount,
-            String pixQrCode,
-            String pixQrCodeUrl,
-            String pixCopyPaste,
-            OffsetDateTime pixExpiresAt,
-            String boletoBarcode,
-            String boletoUrl,
-            LocalDate boletoDueDate,
-            String cardLastFour,
-            String cardBrand,
-            String rawResponse
+    public record PaymentLinkResponse(
+            String id,
+            String url,
+            String status,
+            String type,
+            String planId,
+            OffsetDateTime createdAt
+    ) {}
+
+    @Builder
+    public record PagarmePlanDto(
+            String id,
+            String name,
+            String status,
+            String interval,
+            Integer intervalCount,
+            String billingType,
+            Integer priceInCents,
+            BigDecimal price,
+            List<String> paymentMethods
     ) {}
 
     @Builder
@@ -83,6 +85,8 @@ public class PagarmeDto {
             String gatewayChargeId,
             String gatewaySubscriptionId,
             String customerId,
+            String paymentLinkId,
+            Map<String, String> metadata,
             OffsetDateTime paidAt
     ) {}
 }

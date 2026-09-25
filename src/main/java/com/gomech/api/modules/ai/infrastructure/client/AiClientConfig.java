@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration;
 public class AiClientConfig {
 
     private String baseUrl = "http://localhost:8000";
-    private String serviceSecret = "gm-ai-internal-hmac-secret";
+    private String serviceSecret;
     private String idTokenAudience;
     private int connectTimeoutMs = 3000;
     private int readTimeoutMs = 15000;

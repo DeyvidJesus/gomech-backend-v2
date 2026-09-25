@@ -14,7 +14,15 @@ spring:
     baseline-on-migrate: true
 
 gomech:
+  ai:
+    # Local development only; matches the AI service's own dev default.
+    service-secret: ${GOMECH_AI_SERVICE_SECRET:gm-ai-local-dev-secret}
   tenancy:
     # Local development only: lets a developer exercise tenant-scoped endpoints by hand before the
     # tenant-aware login story is finished. Never enabled in dev, staging or prod.
     trust-request-header: true
+
+jwt:
+  # Local development only. This value is public (it is in this repository), so JwtSecretValidator
+  # rejects it in any other profile.
+  secret: ${JWT_SECRET:e39125fc5add83ed45a24dbe4fa687d1f10bbefb5fb66d1eb44c48180325c342}

@@ -23,7 +23,7 @@ spring:
 gomech:
   ai:
     base-url: ${GOMECH_AI_BASE_URL:http://localhost:8000}
-    service-secret: ${GOMECH_AI_SERVICE_SECRET:gm-ai-internal-hmac-secret}
+    service-secret: ${GOMECH_AI_SERVICE_SECRET:}
     id-token-audience: ${GOMECH_AI_ID_TOKEN_AUDIENCE:}
     connect-timeout-ms: ${GOMECH_AI_CONNECT_TIMEOUT_MS:3000}
     read-timeout-ms: ${GOMECH_AI_READ_TIMEOUT_MS:15000}
@@ -46,7 +46,9 @@ gomech:
       issuer: https://accounts.google.com
 
 jwt:
-  secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+  # No default on purpose: every profile except local must receive JWT_SECRET from the environment,
+  # and JwtSecretValidator stops the application at startup when it is missing, short or public.
+  secret: ${JWT_SECRET:}
   expiration: 900000 # 15 minutos em ms
   refresh-expiration: 604800000 # 7 dias em ms
 

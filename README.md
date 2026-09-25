@@ -24,6 +24,10 @@ A API fica em `http://localhost:8080`; o health check fica em `/actuator/health`
 
 Perfis Spring: `local`, `dev`, `staging` e `prod`. O ambiente implantado usa GCP; a infraestrutura está documentada no repositório principal.
 
+## Segredos
+
+Somente o perfil `local` tem valores padrão para `JWT_SECRET` e `GOMECH_AI_SERVICE_SECRET`, e esses valores são públicos. Nos demais perfis, as duas variáveis precisam vir do ambiente. A aplicação não sobe quando `JWT_SECRET` falta, tem menos de 256 bits depois de decodificado ou usa um valor público de desenvolvimento. Para gerar um segredo: `openssl rand -hex 32`.
+
 ## Referências
 
 - [Guia de estudo do projeto](https://github.com/DeyvidJesus/gomech/blob/master/docs/guias/guia-de-estudo-entrevista.md)

@@ -17,10 +17,15 @@ FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
 # Needed for Docker health checks in local development.
-RUN apk add --no-cache curl
+RUN apk add --no-cache curl \
+    && addgroup -S gomech \
+    && adduser -S -G gomech -H -s /sbin/nologin gomech
 
 # Copy the built jar from the builder stage
-COPY --from=builder /app/target/*.jar app.jar
+COPY --from=builder --chown=gomech:gomech /app/target/*.jar app.jar
+
+# Run as an unprivileged user; port 8080 does not need root.
+USER gomech
 
 # Expose the application port
 EXPOSE 8080

@@ -5,14 +5,15 @@ import com.gomech.api.modules.iam.infrastructure.persistence.model.User;
 import com.gomech.api.modules.iam.infrastructure.persistence.repository.TenantRepository;
 import com.gomech.api.modules.iam.infrastructure.persistence.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-
+@Slf4j
 @Component
 @RequiredArgsConstructor
 @ConditionalOnProperty(name = "gomech.data-loader.enabled", havingValue = "true", matchIfMissing = false)
@@ -38,7 +39,7 @@ public class DataLoader implements CommandLineRunner {
             adminUser.setPasswordHash(passwordEncoder.encode("admin123"));
             userRepository.save(adminUser);
 
-            System.out.println("Tenant Zero e Admin criados! Login: admin@gomech.com / admin123");
+            log.info("Tenant Zero e Admin criados! Login: admin@gomech.com / admin123");
         }
     }
 }

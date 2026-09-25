@@ -15,7 +15,7 @@ import java.util.List;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    private static final String ERROR_TYPE_BASE = "https://gomech.com.br/docs/errors/";
+    private static final String ERROR_TYPE_BASE = "https://gomech.com/docs/errors/";
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ProblemDetail handleValidationExceptions(MethodArgumentNotValidException ex) {

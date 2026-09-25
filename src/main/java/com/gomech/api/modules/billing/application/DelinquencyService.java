@@ -3,7 +3,7 @@ package com.gomech.api.modules.billing.application;
 import com.gomech.api.core.events.TenantReactivatedEvent;
 import com.gomech.api.core.events.TenantSuspendedEvent;
 import com.gomech.api.modules.billing.domain.SubscriptionStatus;
-import com.gomech.api.modules.billing.infrastructure.events.SubscriptionStatusChangedEvent;
+import com.gomech.api.modules.billing.events.SubscriptionStatusChangedEvent;
 import com.gomech.api.modules.billing.infrastructure.persistence.model.Subscription;
 import com.gomech.api.modules.billing.infrastructure.persistence.repository.SubscriptionRepository;
 import lombok.RequiredArgsConstructor;

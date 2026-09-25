@@ -50,6 +50,14 @@ class ModuleArchitectureRulesTest {
         assertProductionClassesExistIn("..modules.finance.application..");
         assertProductionClassesExistIn("..modules.finance.domain..");
         assertProductionClassesExistIn("..modules.finance.infrastructure..");
+        assertProductionClassesExistIn("..modules.analytics.api..");
+        assertProductionClassesExistIn("..modules.analytics.application..");
+        assertProductionClassesExistIn("..modules.analytics.domain..");
+        assertProductionClassesExistIn("..modules.analytics.infrastructure..");
+        assertProductionClassesExistIn("..modules.ai.api..");
+        assertProductionClassesExistIn("..modules.ai.application..");
+        assertProductionClassesExistIn("..modules.ai.domain..");
+        assertProductionClassesExistIn("..modules.ai.infrastructure..");
         assertProductionClassesExistIn("..core..");
 
         assertTrue(

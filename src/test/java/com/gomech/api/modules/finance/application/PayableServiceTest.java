@@ -1,7 +1,6 @@
 package com.gomech.api.modules.finance.application;
 
 import com.gomech.api.modules.finance.api.dto.PayableDtos;
-import com.gomech.api.modules.finance.domain.PayableNotFoundException;
 import com.gomech.api.modules.finance.domain.PayableStatus;
 import com.gomech.api.modules.finance.infrastructure.persistence.entity.FinancePayable;
 import com.gomech.api.modules.finance.infrastructure.persistence.entity.FinanceTransaction;

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gomech.api.modules.crm.api.dto.CreateCustomerRequest;
 import com.gomech.api.modules.crm.api.dto.CreateVehicleRequest;
 import com.gomech.api.modules.crm.api.dto.CustomerResponse;
-import com.gomech.api.modules.crm.api.dto.UpdateCustomerRequest;
 import com.gomech.api.modules.crm.api.dto.VehicleResponse;
 import com.gomech.api.modules.iam.api.dto.AuthResponse;
 import com.gomech.api.modules.iam.api.dto.RegisterWorkshopRequest;
@@ -25,7 +24,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 

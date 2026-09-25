@@ -1,7 +1,6 @@
 package com.gomech.api.modules.tools;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.gomech.api.modules.billing.domain.PlanCode;
 import com.gomech.api.modules.iam.api.dto.AuthResponse;
 import com.gomech.api.modules.iam.api.dto.CreateUnitRequest;
 import com.gomech.api.modules.iam.api.dto.RegisterWorkshopRequest;

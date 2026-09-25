@@ -1,5 +1,7 @@
 # GoMech Backend
 
+[![CI](https://github.com/DeyvidJesus/gomech-backend-v2/actions/workflows/ci.yml/badge.svg)](https://github.com/DeyvidJesus/gomech-backend-v2/actions/workflows/ci.yml)
+
 API REST em Java 21 e Spring Boot 3 para as regras de negócio da plataforma. O backend é um monólito modular: cada domínio tem suas camadas e os módulos se integram por contratos públicos ou eventos.
 
 ## Executar
@@ -14,6 +16,8 @@ docker compose up -d postgres
 ```
 
 A API fica em `http://localhost:8080`; o health check fica em `/actuator/health` e a documentação HTTP em `/swagger-ui.html`.
+
+Testes: `./mvnw test` roda os testes unitários e as regras de arquitetura (ArchUnit); `./mvnw verify` inclui os testes de integração (`*IT`), que sobem PostgreSQL com Testcontainers e exigem Docker. A CI executa `verify` a cada push e pull request.
 
 ## Organização
 

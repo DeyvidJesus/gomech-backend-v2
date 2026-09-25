@@ -11,12 +11,11 @@ import org.springframework.context.annotation.Configuration;
 @Setter
 public class AiClientConfig {
 
-    private String baseUrl = "http://localhost:8088/ai";
-    private String apiKey = "gm-ai-default-key";
+    private String baseUrl = "http://localhost:8000";
     private String serviceSecret = "gm-ai-internal-hmac-secret";
+    private String idTokenAudience;
     private int connectTimeoutMs = 3000;
     private int readTimeoutMs = 15000;
     private int maxRetries = 3;
     private long backoffBaseMs = 150;
-    private boolean mockEnabled = true;
 }

@@ -39,17 +39,18 @@ CREATE POLICY tenant_isolation_policy ON ai_action_proposals
     WITH CHECK (tenant_id = NULLIF(current_setting('app.current_tenant', true), '')::uuid);
 
 -- Seed System Permissions
-INSERT INTO permissions (id, name, description, category, created_at, updated_at)
-VALUES
-    (gen_random_uuid(), 'AI_ACTION_PROPOSE', 'Permite propor ações estruturadas através de IA', 'AI', NOW(), NOW()),
-    (gen_random_uuid(), 'AI_ACTION_CONFIRM', 'Permite revisar, confirmar e executar propostas de ações de IA', 'AI', NOW(), NOW())
-ON CONFLICT (name) DO NOTHING;
+-- AI_ACTION_PROPOSE: propor ações estruturadas através de IA.
+-- AI_ACTION_CONFIRM: revisar, confirmar e executar propostas de ações de IA.
+INSERT INTO permissions (id, code, module) VALUES
+    (uuid_generate_v4(), 'AI_ACTION_PROPOSE', 'AI'),
+    (uuid_generate_v4(), 'AI_ACTION_CONFIRM', 'AI')
+ON CONFLICT (code) DO NOTHING;
 
 -- Grant permissions to default roles
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id
 FROM roles r
 CROSS JOIN permissions p
-WHERE p.name IN ('AI_ACTION_PROPOSE', 'AI_ACTION_CONFIRM')
+WHERE p.code IN ('AI_ACTION_PROPOSE', 'AI_ACTION_CONFIRM')
   AND r.name IN ('Proprietário', 'ADMIN', 'Mecânico', 'Atendente')
 ON CONFLICT DO NOTHING;

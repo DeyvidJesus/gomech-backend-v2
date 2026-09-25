@@ -36,3 +36,7 @@ Somente o perfil `local` tem valores padrão para `JWT_SECRET` e `GOMECH_AI_SERV
 
 - [Arquitetura do backend](https://github.com/DeyvidJesus/gomech/blob/master/docs/BACKEND_ARCHITECTURE.md)
 - [ADRs](https://github.com/DeyvidJesus/gomech/blob/master/docs/adr/README.md)
+
+## Licença
+
+[MIT](LICENSE)

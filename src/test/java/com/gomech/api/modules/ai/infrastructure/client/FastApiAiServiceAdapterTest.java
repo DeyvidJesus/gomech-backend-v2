@@ -3,6 +3,7 @@ package com.gomech.api.modules.ai.infrastructure.client;
 import com.gomech.api.modules.ai.api.dto.AiGatewayDtos;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
@@ -10,6 +11,7 @@ import org.springframework.web.client.RestClient;
 import java.util.List;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -34,6 +36,17 @@ class FastApiAiServiceAdapterTest {
         RestClient.Builder builder = RestClient.builder();
         server = MockRestServiceServer.bindTo(builder).build();
         client = new FastApiAiServiceAdapter(config, builder.build(), RestClient.builder().build());
+    }
+
+    /**
+     * The adapter has a second, package-private constructor for tests, so Spring can only create it
+     * if the production constructor is marked. Without that the application context does not start.
+     */
+    @Test
+    void springCanInstantiateTheAdapter() {
+        new ApplicationContextRunner()
+                .withUserConfiguration(AiClientConfig.class, FastApiAiServiceAdapter.class)
+                .run(context -> assertThat(context).hasNotFailed().hasSingleBean(FastApiAiServiceAdapter.class));
     }
 
     @Test

@@ -10,6 +10,7 @@ import com.gomech.api.modules.ai.domain.AiQuotaExceededException;
 import com.gomech.api.modules.ai.domain.AiRateLimitException;
 import com.gomech.api.modules.ai.domain.AiServiceUnavailableException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
@@ -43,6 +44,8 @@ public class FastApiAiServiceAdapter implements AiServiceClient {
     private final RestClient metadataClient;
     private volatile CachedIdToken cachedIdToken;
 
+    // Two constructors exist (the other one is for tests), so Spring must be told which one to use.
+    @Autowired
     public FastApiAiServiceAdapter(AiClientConfig config) {
         this(config, createRestClient(config.getConnectTimeoutMs(), config.getReadTimeoutMs()),
                 createRestClient(1000, 2000));

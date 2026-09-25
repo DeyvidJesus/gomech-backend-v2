@@ -26,9 +26,14 @@ import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Supplier;
 
+/**
+ * Adaptador de infraestrutura que implementa a porta {@link AiServiceClient} chamando o serviço
+ * FastAPI. O contrato ({@code *Client}) fica na camada application; esta classe é só a
+ * implementação e, por isso, não usa o sufixo reservado a contratos (ADR-002).
+ */
 @Component
 @Slf4j
-public class FastApiAiServiceClient implements AiServiceClient {
+public class FastApiAiServiceAdapter implements AiServiceClient {
 
     private static final String API_PATH = "/api/v1/ai";
     private static final String SERVICE_AUTH_HEADER = "X-GoMech-Service-Auth";
@@ -38,12 +43,12 @@ public class FastApiAiServiceClient implements AiServiceClient {
     private final RestClient metadataClient;
     private volatile CachedIdToken cachedIdToken;
 
-    public FastApiAiServiceClient(AiClientConfig config) {
+    public FastApiAiServiceAdapter(AiClientConfig config) {
         this(config, createRestClient(config.getConnectTimeoutMs(), config.getReadTimeoutMs()),
                 createRestClient(1000, 2000));
     }
 
-    FastApiAiServiceClient(AiClientConfig config, RestClient restClient, RestClient metadataClient) {
+    FastApiAiServiceAdapter(AiClientConfig config, RestClient restClient, RestClient metadataClient) {
         this.config = config;
         this.restClient = restClient;
         this.metadataClient = metadataClient;

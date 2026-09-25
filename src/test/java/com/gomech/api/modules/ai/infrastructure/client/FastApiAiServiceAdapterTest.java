@@ -19,10 +19,10 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 import static org.springframework.http.HttpMethod.POST;
 
-class FastApiAiServiceClientTest {
+class FastApiAiServiceAdapterTest {
 
     private AiClientConfig config;
-    private FastApiAiServiceClient client;
+    private FastApiAiServiceAdapter client;
     private MockRestServiceServer server;
 
     @BeforeEach
@@ -33,7 +33,7 @@ class FastApiAiServiceClientTest {
 
         RestClient.Builder builder = RestClient.builder();
         server = MockRestServiceServer.bindTo(builder).build();
-        client = new FastApiAiServiceClient(config, builder.build(), RestClient.builder().build());
+        client = new FastApiAiServiceAdapter(config, builder.build(), RestClient.builder().build());
     }
 
     @Test

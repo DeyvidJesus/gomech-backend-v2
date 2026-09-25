@@ -21,6 +21,14 @@ spring:
         tenant_identifier_resolver: com.gomech.api.core.tenancy.HibernateTenantIdentifierResolver
 
 gomech:
+  ai:
+    base-url: ${GOMECH_AI_BASE_URL:http://localhost:8000}
+    service-secret: ${GOMECH_AI_SERVICE_SECRET:gm-ai-internal-hmac-secret}
+    id-token-audience: ${GOMECH_AI_ID_TOKEN_AUDIENCE:}
+    connect-timeout-ms: ${GOMECH_AI_CONNECT_TIMEOUT_MS:3000}
+    read-timeout-ms: ${GOMECH_AI_READ_TIMEOUT_MS:15000}
+    max-retries: ${GOMECH_AI_MAX_RETRIES:3}
+    backoff-base-ms: ${GOMECH_AI_BACKOFF_BASE_MS:150}
   tenancy:
     # Whether the X-Tenant-ID header may select a tenant on the public login endpoint.
     # Off everywhere unless a profile explicitly opts in: a caller-provided tenant is never an

@@ -8,11 +8,8 @@ import com.gomech.api.modules.operations.api.dto.AppointmentResponse;
 import com.gomech.api.modules.operations.api.dto.AppointmentSummaryResponse;
 import com.gomech.api.modules.operations.api.dto.ChangeAppointmentStatusRequest;
 import com.gomech.api.modules.operations.api.dto.CreateAppointmentRequest;
-import com.gomech.api.modules.operations.api.dto.UpdateAppointmentRequest;
-import com.gomech.api.modules.operations.domain.AppointmentNotFoundException;
 import com.gomech.api.modules.operations.domain.AppointmentStatus;
 import com.gomech.api.modules.operations.domain.CustomerVehicleMismatchException;
-import com.gomech.api.modules.operations.domain.InvalidAppointmentStatusTransitionException;
 import com.gomech.api.modules.operations.domain.InvalidCalendarRangeException;
 import com.gomech.api.modules.operations.infrastructure.persistence.model.Appointment;
 import com.gomech.api.modules.operations.infrastructure.persistence.repository.AppointmentRepository;
@@ -35,7 +32,6 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)

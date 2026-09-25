@@ -193,6 +193,7 @@ public class BillingEntitlementService implements EntitlementService {
         if (upper.startsWith("TOOLS_") && !enabledModules.contains("TOOLS")) return false;
         if (upper.startsWith("FINANCE_") && !enabledModules.contains("FINANCE")) return false;
         if (upper.startsWith("AI_") && !enabledModules.contains("AI")) return false;
+        if (upper.startsWith("ANALYTICS_") && !enabledModules.contains("ANALYTICS")) return false;
 
         return true;
     }

@@ -1,18 +1,17 @@
 package com.gomech.api.modules.billing.application;
 
 import com.gomech.api.modules.billing.api.dto.PaymentDtos;
+import com.gomech.api.modules.billing.application.gateway.PagarmeGatewayClient;
 import com.gomech.api.modules.billing.domain.PaymentMethod;
 import com.gomech.api.modules.billing.domain.PaymentStatus;
 import com.gomech.api.modules.billing.infrastructure.gateway.PagarmeDto;
-import com.gomech.api.modules.billing.application.gateway.PagarmeGatewayClient;
 import com.gomech.api.modules.billing.infrastructure.persistence.model.BillingPlan;
 import com.gomech.api.modules.billing.infrastructure.persistence.model.Payment;
 import com.gomech.api.modules.billing.infrastructure.persistence.model.Subscription;
 import com.gomech.api.modules.billing.infrastructure.persistence.repository.BillingPlanRepository;
 import com.gomech.api.modules.billing.infrastructure.persistence.repository.PaymentRepository;
 import com.gomech.api.modules.billing.infrastructure.persistence.repository.SubscriptionRepository;
-import com.gomech.api.modules.iam.infrastructure.persistence.model.Tenant;
-import com.gomech.api.modules.iam.infrastructure.persistence.repository.TenantRepository;
+import com.gomech.api.modules.iam.api.IamContract;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -20,27 +19,25 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class PaymentInitiationService {
 
     private final SubscriptionRepository subscriptionRepository;
     private final SubscriptionService subscriptionService;
     private final BillingPlanRepository planRepository;
     private final PaymentRepository paymentRepository;
-    private final TenantRepository tenantRepository;
+    private final IamContract iamContract;
     private final PagarmeGatewayClient pagarmeClient;
 
     /**
-     * Cria uma sessão oficial de Checkout Hospedado (Payment Link) na Pagar.me V5 para assinatura de plano.
+     * Gera sessão de Hosted Checkout (Payment Link) no Pagar.me para cobrança recorrente / avulsa do plano.
      */
     @Transactional
     public PaymentDtos.CheckoutSessionResponse createHostedCheckoutSession(UUID tenantId, PaymentDtos.CreateCheckoutRequest request) {
@@ -83,26 +80,25 @@ public class PaymentInitiationService {
 
         // Obter ou criar Customer no Pagar.me
         String customerId = subscription.getGatewayCustomerId();
-        Tenant tenant = tenantRepository.findById(tenantId).orElse(null);
+        IamContract.TenantContractDto tenant = iamContract.findTenantById(tenantId).orElse(null);
 
         if (customerId == null || customerId.isBlank()) {
-            if (tenant != null && tenant.getGatewayCustomerId() != null) {
-                customerId = tenant.getGatewayCustomerId();
+            if (tenant != null && tenant.gatewayCustomerId() != null) {
+                customerId = tenant.gatewayCustomerId();
             } else if (tenant != null) {
                 try {
                     PagarmeDto.CustomerResponse custRes = pagarmeClient.createOrGetCustomer(
                             PagarmeDto.CustomerRequest.builder()
-                                    .name(tenant.getName() != null ? tenant.getName() : "Oficina GoMech")
-                                    .email(tenant.getEmail() != null ? tenant.getEmail() : "financeiro@oficina.com.br")
-                                    .document(tenant.getCnpj())
-                                    .phone(tenant.getPhone())
+                                    .name(tenant.name() != null ? tenant.name() : "Oficina GoMech")
+                                    .email(tenant.email() != null ? tenant.email() : "financeiro@oficina.com.br")
+                                    .document(tenant.cnpj())
+                                    .phone(tenant.phone())
                                     .type("company")
                                     .build()
                     );
                     if (custRes != null && custRes.id() != null) {
                         customerId = custRes.id();
-                        tenant.setGatewayCustomerId(customerId);
-                        tenantRepository.save(tenant);
+                        iamContract.updateGatewayCustomerId(tenantId, customerId);
                     }
                 } catch (Exception ex) {
                     log.warn("Customer prévio não registrado no gateway; o checkout coletará os dados diretamente: {}", ex.getMessage());

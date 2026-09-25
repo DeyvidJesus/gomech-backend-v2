@@ -17,7 +17,6 @@ import com.gomech.api.modules.operations.api.dto.UpdateInspectionRequest;
 import com.gomech.api.modules.operations.domain.FuelLevel;
 import com.gomech.api.modules.operations.domain.InspectionCategory;
 import com.gomech.api.modules.operations.domain.InspectionItemStatus;
-import com.gomech.api.modules.operations.domain.InspectionStatus;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

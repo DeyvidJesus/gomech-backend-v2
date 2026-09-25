@@ -6,8 +6,6 @@ import com.gomech.api.modules.finance.api.dto.PayableDtos;
 import com.gomech.api.modules.finance.api.dto.ReceivableDtos;
 import com.gomech.api.modules.finance.application.FinanceEventListener;
 import com.gomech.api.modules.finance.domain.AccountType;
-import com.gomech.api.modules.finance.domain.PayableStatus;
-import com.gomech.api.modules.finance.domain.ReceivableStatus;
 import com.gomech.api.modules.iam.api.dto.AuthResponse;
 import com.gomech.api.modules.iam.api.dto.RegisterWorkshopRequest;
 import com.gomech.api.modules.inventory.events.InventoryPurchaseCreatedEvent;

@@ -2,13 +2,11 @@ package com.gomech.api.modules.crm.application;
 
 import com.gomech.api.core.events.DomainEventBus;
 import com.gomech.api.modules.crm.api.dto.CreateVehicleRequest;
-import com.gomech.api.modules.crm.api.dto.UpdateVehicleRequest;
 import com.gomech.api.modules.crm.api.dto.VehicleResponse;
 import com.gomech.api.modules.crm.api.dto.VehicleSummaryResponse;
 import com.gomech.api.modules.crm.domain.CustomerNotFoundException;
 import com.gomech.api.modules.crm.domain.DuplicateLicensePlateException;
 import com.gomech.api.modules.crm.domain.InvalidLicensePlateException;
-import com.gomech.api.modules.crm.domain.VehicleNotFoundException;
 import com.gomech.api.modules.crm.infrastructure.persistence.model.Customer;
 import com.gomech.api.modules.crm.infrastructure.persistence.model.Vehicle;
 import com.gomech.api.modules.crm.infrastructure.persistence.repository.CustomerRepository;
@@ -31,7 +29,6 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)

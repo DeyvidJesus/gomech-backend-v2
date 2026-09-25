@@ -1,7 +1,6 @@
 package com.gomech.api.modules.finance.application;
 
 import com.gomech.api.modules.finance.api.dto.ReceivableDtos;
-import com.gomech.api.modules.finance.domain.ReceivableNotFoundException;
 import com.gomech.api.modules.finance.domain.ReceivableStatus;
 import com.gomech.api.modules.finance.infrastructure.persistence.entity.FinanceReceivable;
 import com.gomech.api.modules.finance.infrastructure.persistence.entity.FinanceTransaction;
@@ -23,7 +22,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;

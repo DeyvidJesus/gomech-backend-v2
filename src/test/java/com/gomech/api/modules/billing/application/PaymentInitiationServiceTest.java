@@ -9,8 +9,7 @@ import com.gomech.api.modules.billing.infrastructure.persistence.model.Subscript
 import com.gomech.api.modules.billing.infrastructure.persistence.repository.BillingPlanRepository;
 import com.gomech.api.modules.billing.infrastructure.persistence.repository.PaymentRepository;
 import com.gomech.api.modules.billing.infrastructure.persistence.repository.SubscriptionRepository;
-import com.gomech.api.modules.iam.infrastructure.persistence.model.Tenant;
-import com.gomech.api.modules.iam.infrastructure.persistence.repository.TenantRepository;
+import com.gomech.api.modules.iam.api.IamContract;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -45,7 +44,7 @@ class PaymentInitiationServiceTest {
     private PaymentRepository paymentRepository;
 
     @Mock
-    private TenantRepository tenantRepository;
+    private IamContract iamContract;
 
     @Mock
     private PagarmeGatewayClient pagarmeClient;
@@ -56,17 +55,22 @@ class PaymentInitiationServiceTest {
     private UUID tenantId;
     private Subscription subscription;
     private BillingPlan proPlan;
-    private Tenant tenant;
+    private IamContract.TenantContractDto tenantDto;
 
     @BeforeEach
     void setUp() {
         tenantId = UUID.randomUUID();
 
-        tenant = new Tenant();
-        tenant.setId(tenantId);
-        tenant.setName("Oficina Turbo Power");
-        tenant.setEmail("contato@turbopower.com.br");
-        tenant.setCnpj("12.345.678/0001-90");
+        tenantDto = new IamContract.TenantContractDto(
+                tenantId,
+                "Oficina Turbo Power",
+                "Turbo Power Auto Center",
+                "12.345.678/0001-90",
+                "contato@turbopower.com.br",
+                "11999999999",
+                null,
+                "ACTIVE"
+        );
 
         proPlan = new BillingPlan();
         proPlan.setCode("PRO");
@@ -107,7 +111,7 @@ class PaymentInitiationServiceTest {
 
         when(subscriptionRepository.findByTenantId(tenantId)).thenReturn(Optional.of(subscription));
         when(planRepository.findByCode("PRO")).thenReturn(Optional.of(proPlan));
-        when(tenantRepository.findById(tenantId)).thenReturn(Optional.of(tenant));
+        when(iamContract.findTenantById(tenantId)).thenReturn(Optional.of(tenantDto));
         when(pagarmeClient.createOrGetCustomer(any())).thenReturn(custResponse);
         when(pagarmeClient.createHostedCheckout(any())).thenReturn(linkResponse);
         when(paymentRepository.save(any(Payment.class))).thenAnswer(i -> i.getArgument(0));

@@ -1,6 +1,5 @@
 package com.gomech.api.modules.operations.application;
 
-import com.gomech.api.core.events.DomainEvent;
 import com.gomech.api.core.events.DomainEventBus;
 import com.gomech.api.modules.crm.api.CrmContract;
 import com.gomech.api.modules.crm.api.dto.CustomerSummaryResponse;
@@ -15,7 +14,6 @@ import com.gomech.api.modules.operations.domain.FuelLevel;
 import com.gomech.api.modules.operations.domain.InspectionAlreadyCompletedException;
 import com.gomech.api.modules.operations.domain.InspectionCategory;
 import com.gomech.api.modules.operations.domain.InspectionItemStatus;
-import com.gomech.api.modules.operations.domain.InspectionNotFoundException;
 import com.gomech.api.modules.operations.domain.InspectionStatus;
 import com.gomech.api.modules.operations.domain.InvalidAppointmentInspectionLinkException;
 import com.gomech.api.modules.operations.events.InspectionCanceledEvent;
@@ -30,7 +28,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -41,7 +38,6 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
